@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <!-- CSS variables for easy theming -->
+  <style>
+    :root{
+      --bg1: #d9eefc; /* outer glow */
+      --bg2: #cfeefe; /* circle */
+      --primary: #2b9cff; /* main blue */
+      --paper: #ffffff;
+      --muted: #c9d6df; /* paper shadow / text lines */
+      --line: #9aa9b6; /* text lines */
+      --check: #0b76d6; /* check circle */
+    }
+  </style>
+
+  <!-- Soft outer glow -->
+  <circle cx="64" cy="64" r="60" fill="url(#g)" opacity="0.95"/>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="var(--bg2)"/>
+      <stop offset="100%" stop-color="var(--bg1)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Document -->
+  <g transform="translate(28,22)">
+    <!-- shadow under paper -->
+    <rect x="0" y="6" width="72" height="88" rx="6" fill="rgba(0,0,0,0.06)"/>
+    <!-- paper -->
+    <rect x="0" y="0" width="72" height="88" rx="6" fill="var(--paper)" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+    <!-- folded corner (top-right) -->
+    <path d="M72 0 L54 0 L72 18 Z" fill="rgba(0,0,0,0.02)"/>
+    <path d="M54 0 L72 18 L72 0 Z" fill="var(--paper)"/>
+    <!-- lines representing text -->
+    <rect x="10" y="18" width="44" height="4" rx="2" fill="var(--line)"/>
+    <rect x="10" y="30" width="52" height="4" rx="2" fill="var(--line)" opacity="0.9"/>
+    <rect x="10" y="42" width="38" height="4" rx="2" fill="var(--line)" opacity="0.9"/>
+    <rect x="10" y="56" width="52" height="4" rx="2" fill="var(--line)" opacity="0.9"/>
+    <rect x="10" y="68" width="30" height="4" rx="2" fill="var(--line)" opacity="0.9"/>
+  </g>
+
+  <!-- Check badge overlapping bottom-right of document -->
+  <g transform="translate(80,72)">
+    <circle cx="0" cy="0" r="22" fill="var(--check)" />
+    <circle cx="0" cy="0" r="22" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <!-- white check -->
+    <path d="M-8 0.5 L-2 6.5 L9 -6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
