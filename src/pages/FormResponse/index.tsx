@@ -12,113 +12,80 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 interface FormResponse {
 	id: string;
 	submittedAt: string;
-	formType: string;
-	respondentName: string;
-	respondentEmail: string;
-	status: 'new' | 'reviewed' | 'responded' | 'closed';
-	priority: 'low' | 'medium' | 'high';
-	category: 'caregiver' | 'institution' | 'academy';
-	summary: string;
+	contact: string;
+	satisfaction: number;
+	accuracy: number;
+	record: string;
+	content: string;
 }
 
 const mockResponses: FormResponse[] = [
 	{
-		id: 'FR-2024-001',
+		id: '4',
 		submittedAt: '2024-12-20 09:15',
-		formType: 'Caregiver Support Request',
-		respondentName: 'Sarah Johnson',
-		respondentEmail: 'sarah.j@email.com',
-		status: 'new',
-		priority: 'high',
-		category: 'caregiver',
-		summary: 'Urgent assistance needed for elderly parent care coordination',
+		contact: '010-1234-5678',
+		satisfaction: 5,
+		accuracy: 5,
+		record: '문의 내역',
+		content: '문의 내역',
 	},
 	{
-		id: 'FR-2024-002',
+		id: '3',
 		submittedAt: '2024-12-20 10:30',
-		formType: 'Institution Partnership Inquiry',
-		respondentName: 'Mark Wilson',
-		respondentEmail: 'm.wilson@healthcare.org',
-		status: 'reviewed',
-		priority: 'medium',
-		category: 'institution',
-		summary: 'Interested in establishing partnership for care services',
+		contact: '010-1234-5678',
+		satisfaction: 5,
+		accuracy: 5,
+		record: '문의 내역',
+		content: '문의 내역',
 	},
 	{
-		id: 'FR-2024-003',
+		id: '2',
 		submittedAt: '2024-12-19 14:22',
-		formType: 'Academy Training Request',
-		respondentName: 'Lisa Chen',
-		respondentEmail: 'l.chen@academy.edu',
-		status: 'responded',
-		priority: 'low',
-		category: 'academy',
-		summary: 'Request for advanced caregiver training program information',
+		contact: '010-1234-5678',
+		satisfaction: 5,
+		accuracy: 5,
+		record: '문의 내역',
+		content: '문의 내역',
 	},
 	{
-		id: 'FR-2024-004',
+		id: '1',
 		submittedAt: '2024-12-19 16:45',
-		formType: 'General Consultation',
-		respondentName: 'Robert Brown',
-		respondentEmail: 'rbrown@email.com',
-		status: 'closed',
-		priority: 'medium',
-		category: 'caregiver',
-		summary: 'Questions about medication management for dementia care',
+		contact: '010-1234-5678',
+		satisfaction: 5,
+		accuracy: 5,
+		record: '문의 내역',
+		content: '문의 내역',
 	},
 ];
 
 const FormResponsePage = () => {
-	const [searchTerm, setSearchTerm] = useState('');
-	const [statusFilter, setStatusFilter] = useState('all');
-	const [categoryFilter, setCategoryFilter] = useState('all');
-	const [activeTab, setActiveTab] = useState('all');
-
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case 'new':
-				return 'bg-red-100 text-red-800';
-			case 'reviewed':
-				return 'bg-yellow-100 text-yellow-800';
-			case 'responded':
-				return 'bg-blue-100 text-blue-800';
-			case 'closed':
-				return 'bg-green-100 text-green-800';
-			default:
-				return 'bg-gray-100 text-gray-800';
-		}
-	};
-
-	const getPriorityColor = (priority: string) => {
+	const getPriorityColor = (priority: number) => {
 		switch (priority) {
-			case 'high':
+			case 5:
 				return 'bg-red-100 text-red-800';
-			case 'medium':
+			case 4:
+			case 3:
 				return 'bg-yellow-100 text-yellow-800';
-			case 'low':
-				return 'bg-green-100 text-green-800';
+			case 2:
+			case 1:
+				return 'bg-gray-100 text-gray-800';
 			default:
 				return 'bg-gray-100 text-gray-800';
 		}
 	};
 
-	const filteredResponses = mockResponses.filter((response) => {
-		const matchesSearch =
-			response.respondentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			response.respondentEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			response.summary.toLowerCase().includes(searchTerm.toLowerCase());
+	// const filteredResponses = mockResponses.filter((response) => {
+	// 	const matchesSearch =
+	// 		response.respondentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+	// 		response.respondentEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+	// 		response.summary.toLowerCase().includes(searchTerm.toLowerCase());
 
-		const matchesStatus = statusFilter === 'all' || response.status === statusFilter;
-		const matchesCategory = categoryFilter === 'all' || response.category === categoryFilter;
-		const matchesTab = activeTab === 'all' || response.status === activeTab;
+	// 	const matchesStatus = statusFilter === 'all' || response.status === statusFilter;
+	// 	const matchesCategory = categoryFilter === 'all' || response.category === categoryFilter;
+	// 	const matchesTab = activeTab === 'all' || response.status === activeTab;
 
-		return matchesSearch && matchesStatus && matchesCategory && matchesTab;
-	});
-
-	const getTabCount = (status: string) => {
-		if (status === 'all') return mockResponses.length;
-		return mockResponses.filter((r) => r.status === status).length;
-	};
+	// 	return matchesSearch && matchesStatus && matchesCategory && matchesTab;
+	// });
 
 	const handleMoveFormTemplate = () => {
 		window.open(window.location.origin + '/form-template', '_blank');
@@ -184,84 +151,62 @@ const FormResponsePage = () => {
 				</CardContent>
 			</Card> */}
 
-			{/* Status Tabs */}
-			<Tabs value={activeTab} onValueChange={setActiveTab}>
-				<TabsList>
-					<TabsTrigger value="all">전체 ({getTabCount('all')})</TabsTrigger>
-					<TabsTrigger value="new">신규 ({getTabCount('new')})</TabsTrigger>
-					<TabsTrigger value="reviewed">검토됨 ({getTabCount('reviewed')})</TabsTrigger>
-					<TabsTrigger value="responded">응답함 ({getTabCount('responded')})</TabsTrigger>
-					<TabsTrigger value="closed">완료 ({getTabCount('closed')})</TabsTrigger>
-				</TabsList>
+			<Card>
+				<CardHeader>
+					<CardTitle>응답 목록</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>ID</TableHead>
+								<TableHead>접수일</TableHead>
+								<TableHead>전화번호</TableHead>
+								<TableHead>상담 만족도</TableHead>
+								<TableHead>대응 만족도</TableHead>
+								<TableHead>비고</TableHead>
+								<TableHead>작업</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{mockResponses.map((response) => (
+								<TableRow key={response.id}>
+									<TableCell className="font-mono text-xl">{response.id}</TableCell>
+									<TableCell className="text-xl">{response.submittedAt}</TableCell>
+									<TableCell>
+										<div className="font-medium">{response.contact}</div>
+									</TableCell>
+									<TableCell>
+										<Badge variant="outline" className="capitalize">
+											{response.satisfaction}
+										</Badge>
+									</TableCell>
+									<TableCell>
+										<Badge className={getPriorityColor(response.accuracy)}>{response.accuracy}</Badge>
+									</TableCell>
+									<TableCell className="max-w-xs truncate" title={response.content}>
+										{response.content}
+									</TableCell>
+									<TableCell>
+										<div className="flex gap-4">
+											<Button variant="ghost" size="sm">
+												<Eye className="h-16 w-16" />
+											</Button>
+											<Button variant="ghost" size="sm">
+												<MessageCircle className="h-16 w-16" />
+											</Button>
+										</div>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
 
-				<TabsContent value={activeTab}>
-					<Card>
-						<CardHeader>
-							<CardTitle>응답 목록 ({filteredResponses.length})</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>ID</TableHead>
-										<TableHead>접수일</TableHead>
-										<TableHead>폼 유형</TableHead>
-										<TableHead>신청자</TableHead>
-										<TableHead>분야</TableHead>
-										<TableHead>우선순위</TableHead>
-										<TableHead>상태</TableHead>
-										<TableHead>요약</TableHead>
-										<TableHead>작업</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{filteredResponses.map((response) => (
-										<TableRow key={response.id}>
-											<TableCell className="text-14 font-mono">{response.id}</TableCell>
-											<TableCell className="text-14">{response.submittedAt}</TableCell>
-											<TableCell>{response.formType}</TableCell>
-											<TableCell>
-												<div>
-													<div className="font-medium">{response.respondentName}</div>
-													<div className="text-muted-foreground text-14">{response.respondentEmail}</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<Badge variant="outline" className="capitalize">
-													{response.category}
-												</Badge>
-											</TableCell>
-											<TableCell>
-												<Badge className={getPriorityColor(response.priority)}>{response.priority}</Badge>
-											</TableCell>
-											<TableCell>
-												<Badge className={getStatusColor(response.status)}>{response.status}</Badge>
-											</TableCell>
-											<TableCell className="max-w-xs truncate" title={response.summary}>
-												{response.summary}
-											</TableCell>
-											<TableCell>
-												<div className="flex gap-4">
-													<Button variant="ghost" size="sm">
-														<Eye className="h-16 w-16" />
-													</Button>
-													<Button variant="ghost" size="sm">
-														<MessageCircle className="h-16 w-16" />
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-
-							{filteredResponses.length === 0 && (
-								<div className="text-muted-foreground py-32 text-center">검색 조건에 맞는 응답이 없습니다.</div>
-							)}
-						</CardContent>
-					</Card>
-				</TabsContent>
-			</Tabs>
+					{mockResponses.length === 0 && (
+						<div className="text-muted-foreground py-32 text-center">검색 조건에 맞는 응답이 없습니다.</div>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	);
 };
