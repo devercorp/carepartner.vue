@@ -1,51 +1,58 @@
-import { CheckCircle, FileText } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckCircle } from 'lucide-react';
 import { useState } from 'react';
+import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import DocumentIcon from '@/assets/document.svg?react';
 
-import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Checkbox } from '../../components/ui/checkbox';
+import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 
+interface FormData {
+	contact: string;
+	satisfaction: number;
+	accuracy: number;
+	record: string;
+	content?: string;
+}
+
 const FormTemplatePage = () => {
-	const [formData, setFormData] = useState({
-		name: '',
-		email: '',
-		phone: '',
-		category: '',
-		urgency: '',
-		subject: '',
-		description: '',
-		services: [] as string[],
-		agreement: false,
-	});
 	const [isSubmitted, setIsSubmitted] = useState(false);
 
-	const handleServiceChange = (service: string, checked: boolean) => {
-		if (checked) {
-			setFormData((prev) => ({
-				...prev,
-				services: [...prev.services, service],
-			}));
-		} else {
-			setFormData((prev) => ({
-				...prev,
-				services: prev.services.filter((s) => s !== service),
-			}));
-		}
+	const { watch, register, setValue, handleSubmit, reset } = useForm<FormData>({
+		defaultValues: {
+			contact: '',
+			satisfaction: 0,
+			accuracy: 0,
+			record: '',
+			content: '',
+		},
+		resolver: zodResolver(
+			z.object({
+				contact: z.string().min(1),
+				satisfaction: z.number().min(1).max(5),
+				accuracy: z.number().min(1).max(5),
+				record: z.string().min(1, '필수 질문입니다.'),
+				content: z.string().optional(),
+			})
+		),
+	});
+
+	const onSubmit: SubmitHandler<FormData> = (data) => {
+		// Here you would normally send the data to your API
+		console.log('Form submitted:', data);
+		setIsSubmitted(true);
+		reset();
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-		// Here you would normally send the data to your API
-		console.log('Form submitted:', formData);
-		setIsSubmitted(true);
+	const onError: SubmitErrorHandler<FormData> = (errors) => {
+		console.log('Form errors:', errors);
+		alert('필수 질문을 입력해주세요.');
 	};
 
 	if (isSubmitted) {
@@ -57,16 +64,13 @@ const FormTemplatePage = () => {
 							<div className="mx-auto mb-16 flex h-64 w-64 items-center justify-center rounded-full bg-green-100">
 								<CheckCircle className="h-32 w-32 text-green-600" />
 							</div>
-							<h2 className="mb-8 text-2xl font-semibold">접수 완료</h2>
-							<p className="text-xl text-gray-600">
-								상담 요청이 성공적으로 접수되었습니다.
+							<h2 className="mb-8 text-4xl font-semibold">제출 완료</h2>
+							<p className="text-2xl text-gray-600">
+								더 나은 서비스를 위해 노력하겠습니다.
 								<br />
-								빠른 시간 내에 연락드리겠습니다.
+								감사합니다.
 							</p>
 						</div>
-						<Button onClick={() => setIsSubmitted(false)} className="w-full">
-							다른 상담 신청하기
-						</Button>
 					</CardContent>
 				</Card>
 			</div>
@@ -99,186 +103,106 @@ const FormTemplatePage = () => {
 				</Card>
 
 				{/* Form */}
-				<Card>
+				<Card className="gap-16">
 					<CardHeader>
-						<CardTitle className="text-2xl">기본 정보</CardTitle>
+						<p className="text-xl text-red-500">* 표시는 필수 질문입니다.</p>
 					</CardHeader>
 					<CardContent>
-						<form onSubmit={handleSubmit} className="space-y-24">
+						<form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-32">
 							{/* Personal Information */}
-							<div className="grid grid-cols-1 gap-16 md:grid-cols-2">
-								<div className="space-y-8">
-									<Label htmlFor="name">이름 *</Label>
-									<Input
-										id="name"
-										value={formData.name}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												name: e.target.value,
-											})
-										}
-										placeholder="성함을 입력하세요"
-										required
-									/>
-								</div>
-								<div className="space-y-8">
-									<Label htmlFor="phone">연락처 *</Label>
-									<Input
-										id="phone"
-										value={formData.phone}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												phone: e.target.value,
-											})
-										}
-										placeholder="전화번호를 입력하세요"
-										required
-									/>
+							<div className="space-y-8">
+								<Label className="text-2xl" htmlFor="phone">
+									전화번호를 입력해주세요 <div className="pb-4 text-xl text-red-500">*</div>
+								</Label>
+								<Input id="phone" placeholder="전화번호" {...register('contact')} />
+							</div>
+
+							<div className="space-y-8">
+								<Label className="text-2xl" htmlFor="phone">
+									고객센터 상담에 전반적으로 얼마나 만족하시나요? <div className="pb-4 text-xl text-red-500">*</div>
+								</Label>
+								<div className="rounded-lg border bg-white p-16">
+									<div className="item-center mt-12 flex justify-between">
+										<span className="pt-32 text-lg text-gray-600">매우 불만족</span>
+										<RadioGroup
+											className="flex w-[60%] items-center justify-between"
+											orientation="horizontal"
+											value={watch('satisfaction').toString()}
+											onValueChange={(value) => setValue('satisfaction', Number(value))}
+										>
+											{[1, 2, 3, 4, 5].map((n) => (
+												<div key={`satisfaction-2-${n}`} className="flex flex-col items-center gap-12">
+													<label htmlFor={`satisfaction-2-${n}`}>{n}</label>
+													<RadioGroupItem value={`${n}`} id={`satisfaction-2-${n}`} />
+												</div>
+											))}
+										</RadioGroup>
+										<span className="pt-32 text-lg text-gray-600">매우 만족</span>
+									</div>
 								</div>
 							</div>
 
 							<div className="space-y-8">
-								<Label htmlFor="email">이메일 *</Label>
-								<Input
-									id="email"
-									type="email"
-									value={formData.email}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											email: e.target.value,
-										})
-									}
-									placeholder="이메일 주소를 입력하세요"
-									required
-								/>
-							</div>
-
-							{/* Category Selection */}
-							<div className="space-y-8">
-								<Label>상담 분야 *</Label>
-								<Select
-									value={formData.category}
-									onValueChange={(value) =>
-										setFormData({
-											...formData,
-											category: value,
-										})
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="상담 분야를 선택하세요" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="caregiver">간병인 서비스</SelectItem>
-										<SelectItem value="institution">기관 연계</SelectItem>
-										<SelectItem value="academy">교육 프로그램</SelectItem>
-										<SelectItem value="general">일반 상담</SelectItem>
-									</SelectContent>
-								</Select>
+								<Label className="text-2xl" htmlFor="phone">
+									고객센터가 제공한 답변이 문의하신 내용에 정확하게 대응되었나요?
+									<div className="pb-4 text-xl text-red-500">*</div>
+								</Label>
+								<div className="rounded-lg border bg-white p-16">
+									<div className="item-center mt-12 flex justify-between">
+										<span className="pt-32 text-lg text-gray-600">매우 불만족</span>
+										<RadioGroup
+											className="flex w-[60%] items-center justify-between"
+											orientation="horizontal"
+											value={watch('accuracy').toString()}
+											onValueChange={(value) => setValue('accuracy', Number(value))}
+										>
+											{[1, 2, 3, 4, 5].map((n) => (
+												<div key={`satisfaction-2-${n}`} className="flex flex-col items-center gap-12">
+													<label htmlFor={`satisfaction-2-${n}`}>{n}</label>
+													<RadioGroupItem value={`${n}`} id={`satisfaction-2-${n}`} />
+												</div>
+											))}
+										</RadioGroup>
+										<span className="pt-32 text-lg text-gray-600">매우 만족</span>
+									</div>
+								</div>
 							</div>
 
 							{/* Urgency */}
-							<div className="space-y-8">
-								<Label>긴급도 *</Label>
+							<div className="space-y-16">
+								<Label className="text-2xl">
+									이번 문의와 같은 내용을 고객센터에 예전에 문의하신 적이 있으신가요?
+									<div className="pb-4 text-xl text-red-500">*</div>
+								</Label>
 								<RadioGroup
-									value={formData.urgency}
-									onValueChange={(value) => setFormData({ ...formData, urgency: value })}
-									className="flex flex-col gap-8"
+									className="flex flex-col gap-16"
+									value={watch('record')}
+									onValueChange={(value) => setValue('record', value)}
 								>
 									<div className="flex items-center space-x-8">
 										<RadioGroupItem value="high" id="high" />
-										<Label htmlFor="high">긴급 (24시간 내 연락 필요)</Label>
+										<Label htmlFor="high">예, 동일한 문의를 한 적 있습니다.</Label>
 									</div>
 									<div className="flex items-center space-x-8">
 										<RadioGroupItem value="medium" id="medium" />
-										<Label htmlFor="medium">보통 (2-3일 내 연락)</Label>
+										<Label htmlFor="medium">아니요, 이번이 처음입니다.</Label>
 									</div>
 									<div className="flex items-center space-x-8">
 										<RadioGroupItem value="low" id="low" />
-										<Label htmlFor="low">일반 (일주일 내 연락)</Label>
+										<Label htmlFor="low">잘 모르겠습니다.</Label>
 									</div>
 								</RadioGroup>
 							</div>
 
-							{/* Services */}
 							<div className="space-y-8">
-								<Label>관심 서비스 (중복 선택 가능)</Label>
-								<div className="mt-8 grid grid-cols-2 gap-8">
-									{['응급 대응', '약물 관리', '일상 돌봄', '이동 지원', '가족 상담', '기관 연계'].map((service) => (
-										<div key={service} className="flex items-center space-x-8">
-											<Checkbox
-												id={service}
-												checked={formData.services.includes(service)}
-												onCheckedChange={(checked) => handleServiceChange(service, !!checked)}
-											/>
-											<Label htmlFor={service}>{service}</Label>
-										</div>
-									))}
-								</div>
-							</div>
-
-							{/* Subject and Description */}
-							<div className="space-y-8">
-								<Label htmlFor="subject">상담 제목 *</Label>
-								<Input
-									id="subject"
-									value={formData.subject}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											subject: e.target.value,
-										})
-									}
-									placeholder="상담 제목을 입력하세요"
-									required
-								/>
-							</div>
-
-							<div className="space-y-8">
-								<Label htmlFor="description">상세 내용 *</Label>
-								<Textarea
-									id="description"
-									value={formData.description}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											description: e.target.value,
-										})
-									}
-									placeholder="상담받고 싶은 내용을 자세히 작성해 주세요"
-									rows={5}
-									required
-								/>
-							</div>
-
-							{/* Agreement */}
-							<div className="flex items-center space-x-8">
-								<Checkbox
-									id="agreement"
-									checked={formData.agreement}
-									onCheckedChange={(checked) =>
-										setFormData({
-											...formData,
-											agreement: !!checked,
-										})
-									}
-								/>
-								<Label htmlFor="agreement" className="text-14">
-									개인정보 수집 및 이용에 동의합니다 *
+								<Label htmlFor="description" className="text-2xl">
+									상담을 받으시며 느낀 점이나 개선되었으면 하는 부분이 있다면 자유롭게 남겨 주세요.
 								</Label>
+								<Textarea id="description" {...register('content')} placeholder="내용" rows={5} />
 							</div>
 
-							<Alert>
-								<AlertDescription>
-									입력하신 개인정보는 상담 목적으로만 사용되며, 상담 완료 후 안전하게 삭제됩니다.
-								</AlertDescription>
-							</Alert>
-
-							<Button type="submit" className="w-full" size="lg" disabled={!formData.agreement}>
-								상담 신청하기
+							<Button type="submit" className="w-full" size="lg">
+								제출
 							</Button>
 						</form>
 					</CardContent>
