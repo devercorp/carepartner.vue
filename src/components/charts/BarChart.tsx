@@ -43,7 +43,7 @@ export function BarChart({
 						}}
 					/>
 					<Bar dataKey={dataKey} radius={[4, 4, 0, 0]}>
-						{data.map((entry, index) => (
+						{data.map((_, index) => (
 							<Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
 						))}
 					</Bar>

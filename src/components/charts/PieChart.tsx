@@ -3,7 +3,7 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
 interface PieChartProps {
 	data: any[];
 	dataKey: string;
-	nameKey: string;
+	// nameKey: string;
 	title?: string;
 	colors?: string[];
 	height?: number;
@@ -13,7 +13,7 @@ interface PieChartProps {
 export function PieChart({
 	data,
 	dataKey,
-	nameKey,
+	// nameKey,
 	title,
 	colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#6B7280'],
 	height = 300,
@@ -25,7 +25,7 @@ export function PieChart({
 			<ResponsiveContainer width="100%" height={height}>
 				<RechartsPieChart>
 					<Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey={dataKey}>
-						{data.map((entry, index) => (
+						{data.map((_, index) => (
 							<Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
 						))}
 					</Pie>
