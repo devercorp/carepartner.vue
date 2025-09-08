@@ -55,7 +55,6 @@ export function NewDashboard() {
 						<PieChart
 							data={promotionalSalesData}
 							dataKey="value"
-							nameKey="name"
 							height={250}
 							colors={['#3B82F6', '#10B981', '#F59E0B']}
 						/>

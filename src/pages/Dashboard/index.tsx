@@ -183,7 +183,7 @@ const DashboardPage = () => {
 								<CardTitle>전체 상담 유형 분포</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<PieChart data={channelData} dataKey="value" nameKey="name" height={300} />
+								<PieChart data={channelData} dataKey="value" height={300} />
 							</CardContent>
 						</Card>
 					</div>
@@ -244,7 +244,7 @@ const DashboardPage = () => {
 										<CardTitle>지속적으로 증가하는 태그 top 5</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<PieChart data={tagDistribution} dataKey="value" nameKey="name" height={300} />
+										<PieChart data={tagDistribution} dataKey="value" height={300} />
 									</CardContent>
 								</Card>
 								// 		</div>
