@@ -53,27 +53,27 @@ export const tagDistribution = [
 ];
 
 export const dailyTrendData = [
-	{ period: '오늘', usage: 45, inconvenience: 23, error: 12 },
-	{ period: '어제', usage: 52, inconvenience: 28, error: 15 },
-	{ period: '2일전', usage: 48, inconvenience: 25, error: 13 },
-	{ period: '3일전', usage: 56, inconvenience: 32, error: 18 },
+	{ period: '오늘', usage: 45, inconvenience: 23, error: 12, etc: 10 },
+	{ period: '어제', usage: 52, inconvenience: 28, error: 15, etc: 12 },
+	{ period: '2일전', usage: 48, inconvenience: 25, error: 13, etc: 11 },
+	{ period: '3일전', usage: 56, inconvenience: 32, error: 18, etc: 13 },
 ];
 
 export const weeklyTrendData = [
-	{ period: '1주차', usage: 45, inconvenience: 23, error: 12 },
-	{ period: '2주차', usage: 52, inconvenience: 28, error: 15 },
-	{ period: '3주차', usage: 48, inconvenience: 25, error: 13 },
-	{ period: '4주차', usage: 56, inconvenience: 32, error: 18 },
-	{ period: '5주차', usage: 56, inconvenience: 32, error: 18 },
+	{ period: '1주차', usage: 45, inconvenience: 23, error: 12, etc: 10 },
+	{ period: '2주차', usage: 52, inconvenience: 28, error: 15, etc: 12 },
+	{ period: '3주차', usage: 48, inconvenience: 25, error: 13, etc: 11 },
+	{ period: '4주차', usage: 56, inconvenience: 32, error: 18, etc: 13 },
+	{ period: '5주차', usage: 56, inconvenience: 32, error: 18, etc: 13 },
 ];
 
 export const monthlyTrendData = [
-	{ period: 'Jan', usage: 178, inconvenience: 89, error: 45 },
-	{ period: 'Feb', usage: 195, inconvenience: 92, error: 52 },
-	{ period: 'Mar', usage: 212, inconvenience: 98, error: 58 },
-	{ period: 'Apr', usage: 189, inconvenience: 95, error: 61 },
-	{ period: 'May', usage: 234, inconvenience: 112, error: 67 },
-	{ period: 'Jun', usage: 267, inconvenience: 128, error: 74 },
+	{ period: 'Jan', usage: 178, inconvenience: 89, error: 45, etc: 10 },
+	{ period: 'Feb', usage: 195, inconvenience: 92, error: 52, etc: 12 },
+	{ period: 'Mar', usage: 212, inconvenience: 98, error: 58, etc: 11 },
+	{ period: 'Apr', usage: 189, inconvenience: 95, error: 61, etc: 13 },
+	{ period: 'May', usage: 234, inconvenience: 112, error: 67, etc: 13 },
+	{ period: 'Jun', usage: 267, inconvenience: 128, error: 74, etc: 13 },
 ];
 
 export const topInquiryTags = {

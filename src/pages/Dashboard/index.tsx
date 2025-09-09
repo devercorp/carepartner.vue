@@ -7,8 +7,8 @@ import { LineChart } from '../../components/charts/LineChart';
 import { PieChart } from '../../components/charts/PieChart';
 import { DataTable } from '../../components/dashboard/DataTable';
 import { KPICard } from '../../components/dashboard/KPICard';
-import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Textarea } from '../../components/ui/textarea';
 import {
@@ -23,71 +23,118 @@ import {
 	dailyTrendData,
 } from '../../data/mockData';
 
+const DIVISION_TABS = [
+	{ label: '전체', value: 'total' },
+	{ label: '요양사', value: 'caregiver' },
+	{ label: '기관', value: 'institution' },
+	{ label: '아카데미', value: 'academy' },
+] as const;
+
+const trendLines = [
+	{ dataKey: 'usage', name: '사용법', color: '#3B82F6' },
+	{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
+	{ dataKey: 'error', name: '오류', color: '#10B981' },
+	{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
+];
+
+const topTagsColumns = [
+	{ key: 'tag', label: '태그명', type: 'text' },
+	{ key: 'count', label: '건수', type: 'number' },
+	{ key: 'ratio', label: '비율', type: 'percentage' },
+	{ key: 'trend', label: '추이', type: 'trend' },
+];
+
+const dailyIssuesColumns = [
+	{ key: 'time', label: '시간', type: 'text' },
+	{ key: 'issue', label: '이슈', type: 'text' },
+	{ key: 'severity', label: '심각도', type: 'text' },
+	{ key: 'resolved', label: '상태', type: 'text' },
+];
+
+// Editable Issue Details Table
+const ISSUE_ROWS = [
+	{ group: '케어파트너', subGroup: '요양사' },
+	{ group: '케어파트너', subGroup: '기관' },
+	{ group: '아카데미', subGroup: '' },
+] as const;
+
+type IssueKey = `${(typeof ISSUE_ROWS)[number]['group']}|${(typeof ISSUE_ROWS)[number]['subGroup']}`;
+
+type IssueCell = {
+	detail: string;
+	direction: string;
+};
+
 const DashboardPage = () => {
-	const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-	const [activeDivision, setActiveDivision] = useState<'total' | 'caregiver' | 'institution' | 'academy'>('total');
+	const [activeDivision, setActiveDivision] = useState<(typeof DIVISION_TABS)[number]['value']>('total');
+	const [activeDateTab, setActiveDateTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-	const [notes, setNotes] = useState('');
-
-	const currentKPIs = kpiData[activeTab as keyof typeof kpiData];
-
-	const trendLines = [
-		{ dataKey: 'usage', name: '사용법', color: '#3B82F6' },
-		{ dataKey: 'inconvenience', name: '불편', color: '#10B981' },
-		{ dataKey: 'error', name: '오류', color: '#F59E0B' },
-	];
+	const currentKPIs = kpiData[activeDateTab as keyof typeof kpiData];
 
 	const currentTrendData =
-		activeTab === 'daily' ? dailyTrendData : activeTab === 'monthly' ? monthlyTrendData : weeklyTrendData;
+		activeDateTab === 'daily' ? dailyTrendData : activeDateTab === 'monthly' ? monthlyTrendData : weeklyTrendData;
 	const currentTopTags =
-		activeTab === 'daily' ? topInquiryTags.weekly : topInquiryTags[activeTab as keyof typeof topInquiryTags];
+		activeDateTab === 'daily' ? topInquiryTags.weekly : topInquiryTags[activeDateTab as keyof typeof topInquiryTags];
 
-	const topTagsColumns = [
-		{ key: 'tag', label: '태그명', type: 'text' },
-		{ key: 'count', label: '건수', type: 'number' },
-		{ key: 'ratio', label: '비율', type: 'percentage' },
-		{ key: 'trend', label: '추이', type: 'trend' },
-	];
+	// Local state to edit per-row "상세" and "개선 방향성"
+	const [issueCells, setIssueCells] = useState<Record<IssueKey, IssueCell>>(() => {
+		const INITIAL_TEXT = '';
+		const initialEntries = ISSUE_ROWS.map((row) => {
+			const key = `${row.group}|${row.subGroup}` as IssueKey;
+			return [key, { detail: INITIAL_TEXT, direction: INITIAL_TEXT } satisfies IssueCell] as const;
+		});
+		return Object.fromEntries(initialEntries) as Record<IssueKey, IssueCell>;
+	});
 
-	const increasingTagsColumns = [
-		{ key: 'tag', label: 'Tag', type: 'text' },
-		{ key: 'trend', label: 'Growth %', type: 'trend' },
-		{ key: 'months', label: 'Months', type: 'number' },
-		{ key: 'currentCount', label: 'Current Count', type: 'number' },
-	];
-
-	const dailyIssuesColumns = [
-		{ key: 'time', label: 'Time', type: 'text' },
-		{ key: 'issue', label: 'Issue', type: 'text' },
-		{ key: 'severity', label: 'Severity', type: 'text' },
-		{ key: 'resolved', label: 'Status', type: 'text' },
-	];
-
-	const processedDailyIssues = dailyIssues.map((issue) => ({
-		...issue,
-		resolved: issue.resolved ? 'Resolved' : 'Pending',
-	}));
+	const handleCellChange = (key: IssueKey, field: keyof IssueCell, value: string) => {
+		setIssueCells((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+	};
 
 	return (
 		<div className="space-y-24 p-24">
 			<div className="flex items-center justify-between">
 				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
-				{/* <div className="text-muted-foreground text-2xl">마지막 업데이트 날짜: {new Date().toLocaleString()}</div> */}
+				<div className="text-muted-foreground text-2xl">마지막 업데이트 날짜: {new Date().toLocaleString()}</div>
 			</div>
 
-			<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'daily' | 'weekly' | 'monthly')}>
+			<Tabs
+				value={activeDivision}
+				onValueChange={(value) => setActiveDivision(value as (typeof DIVISION_TABS)[number]['value'])}
+			>
+				<TabsList className="w-full bg-transparent p-0">
+					{DIVISION_TABS.map((division) => (
+						<TabsTrigger
+							key={division.value}
+							className={cn(
+								'border-0 font-semibold data-[state=active]:text-green-600',
+								'border-b-2 border-gray-200 data-[state=active]:border-0 data-[state=active]:border-b-2',
+								'data-[state=active]:border-green-600',
+								'rounded-none data-[state=active]:bg-transparent',
+								'data-[state=active]:shadow-none'
+							)}
+							value={division.value}
+						>
+							{division.label}
+						</TabsTrigger>
+					))}
+				</TabsList>
+			</Tabs>
+
+			<Tabs
+				className="gap-24"
+				value={activeDateTab}
+				onValueChange={(value) => setActiveDateTab(value as 'daily' | 'weekly' | 'monthly')}
+			>
 				<TabsList>
 					<TabsTrigger value="daily">일간</TabsTrigger>
 					<TabsTrigger value="weekly">주간</TabsTrigger>
 					<TabsTrigger value="monthly">월간</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value={activeTab} className="space-y-24">
+				<TabsContent value={activeDateTab} className="space-y-24">
 					{/* Secondary KPI Cards */}
 					<div className="grid grid-cols-1 gap-16 md:grid-cols-4">
 						<KPICard
-							className={cn('cursor-pointer', activeDivision === 'total' && 'border-blue-300')}
-							onClick={() => setActiveDivision('total')}
 							title="총 상담 건수"
 							value={currentKPIs.totalInquiries.value}
 							trend={currentKPIs.totalInquiries.trend}
@@ -95,24 +142,18 @@ const DashboardPage = () => {
 							color="blue"
 						/>
 						<KPICard
-							className={cn('cursor-pointer', activeDivision === 'caregiver' && 'border-blue-300')}
-							onClick={() => setActiveDivision('caregiver')}
 							title="요양사 상담 건수"
 							value={currentKPIs.caregiverInquiries.value}
 							trend={currentKPIs.caregiverInquiries.trend}
 							color="blue"
 						/>
 						<KPICard
-							className={cn('cursor-pointer', activeDivision === 'institution' && 'border-blue-300')}
-							onClick={() => setActiveDivision('institution')}
 							title="기관 상담 건수"
 							value={currentKPIs.institutionInquiries.value}
 							trend={currentKPIs.institutionInquiries.trend}
 							color="green"
 						/>
 						<KPICard
-							className={cn('cursor-pointer', activeDivision === 'academy' && 'border-blue-300')}
-							onClick={() => setActiveDivision('academy')}
 							title="아카데미 상담 건수"
 							value={currentKPIs.academyInquiries.value}
 							trend={currentKPIs.academyInquiries.trend}
@@ -167,6 +208,19 @@ const DashboardPage = () => {
 						/>
 					</div>
 
+					<Card>
+						<CardHeader>
+							<CardTitle>상담 만족도</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<LineChart
+								data={satisfactionTrendData}
+								lines={[{ dataKey: 'score', name: '상담 만족도', color: '#10B981' }]}
+								height={200}
+							/>
+						</CardContent>
+					</Card>
+
 					{/* Charts Section */}
 					<div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
 						<Card>
@@ -188,50 +242,119 @@ const DashboardPage = () => {
 						</Card>
 					</div>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>상담 만족도</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<LineChart
-								data={satisfactionTrendData}
-								lines={[{ dataKey: 'score', name: '상담 만족도', color: '#10B981' }]}
-								height={200}
-							/>
-						</CardContent>
-					</Card>
-
 					{/* Daily Specific Content */}
-					{activeTab === 'daily' && (
-						<div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
-							<DataTable title="Major Issues Today" data={processedDailyIssues} columns={dailyIssuesColumns} />
+					{activeDateTab === 'daily' && (
+						<div className="space-y-24">
 							<Card>
 								<CardHeader>
-									<CardTitle>비고란</CardTitle>
+									<CardTitle>응대 Issue 문의 상세</CardTitle>
 								</CardHeader>
-								<CardContent className="space-y-16">
-									<Textarea
-										placeholder="오늘의 운영 이슈 사항을 작성하세요."
-										value={notes}
-										onChange={(e) => setNotes(e.target.value)}
-										className="min-h-[120px]"
-									/>
-									<Button className="w-full">Save Notes</Button>
+								<CardContent>
+									<Table>
+										<TableHeader>
+											<TableRow className="bg-gray-100">
+												<TableHead className="w-[160px] text-center">구분</TableHead>
+												<TableHead className="text-center">응대 Issue 상세</TableHead>
+												<TableHead className="text-center">개선 방향성</TableHead>
+											</TableRow>
+										</TableHeader>
+										<TableBody>
+											{/* 케어파트너 - 2 rows with rowSpan for group */}
+											<TableRow>
+												<TableCell rowSpan={2} className="align-top">
+													<div className="flex h-full flex-1 gap-4">
+														<div className="font-semibold">케어파트너</div>
+														<div className="text-muted-foreground grid grid-rows-2 gap-4">
+															<div className="grid-row-1 font-semibold">요양사</div>
+															<div className="grid-row-1 font-semibold">기관</div>
+														</div>
+													</div>
+												</TableCell>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'케어파트너'}|${'요양사'}` as IssueKey].detail}
+														onChange={(e) =>
+															handleCellChange(`${'케어파트너'}|${'요양사'}` as IssueKey, 'detail', e.target.value)
+														}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'케어파트너'}|${'요양사'}` as IssueKey].direction}
+														onChange={(e) =>
+															handleCellChange(`${'케어파트너'}|${'요양사'}` as IssueKey, 'direction', e.target.value)
+														}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'케어파트너'}|${'기관'}` as IssueKey].detail}
+														onChange={(e) =>
+															handleCellChange(`${'케어파트너'}|${'기관'}` as IssueKey, 'detail', e.target.value)
+														}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'케어파트너'}|${'기관'}` as IssueKey].direction}
+														onChange={(e) =>
+															handleCellChange(`${'케어파트너'}|${'기관'}` as IssueKey, 'direction', e.target.value)
+														}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+											</TableRow>
+
+											{/* 아카데미 - single row */}
+											<TableRow>
+												<TableCell className="w-[160px] align-top">
+													<div className="font-semibold">아카데미</div>
+												</TableCell>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'아카데미'}|` as IssueKey].detail}
+														onChange={(e) => handleCellChange(`${'아카데미'}|` as IssueKey, 'detail', e.target.value)}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+												<TableCell>
+													<Textarea
+														value={issueCells[`${'아카데미'}|` as IssueKey].direction}
+														onChange={(e) =>
+															handleCellChange(`${'아카데미'}|` as IssueKey, 'direction', e.target.value)
+														}
+														placeholder="-"
+														className="min-h-[48px]"
+													/>
+												</TableCell>
+											</TableRow>
+										</TableBody>
+									</Table>
 								</CardContent>
 							</Card>
 						</div>
 					)}
 
 					{/* Weekly/Monthly Specific Content */}
-					{(activeTab === 'weekly' || activeTab === 'monthly') && (
+					{(activeDateTab === 'weekly' || activeDateTab === 'monthly') && (
 						<div className="space-y-24">
 							<DataTable
-								title={`인입이 높은 태그 top 5 (${activeTab === 'weekly' ? '주간' : '월간'})`}
+								title={`인입이 높은 태그 top 5 (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
 								data={currentTopTags}
 								columns={topTagsColumns}
 							/>
 
-							{activeTab === 'monthly' && (
+							{activeDateTab === 'monthly' && (
 								// <div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
 								// 	<DataTable
 								// 		title="인입이 높은 태그 top 5"
