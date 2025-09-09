@@ -1,6 +1,9 @@
 import { BarChart3, FileText, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import { uploadFile } from '@/apis/file';
+import { cn } from '@/lib/utils';
 
 import { Button } from '../ui/button';
 
@@ -8,6 +11,7 @@ export function Sidebar() {
 	const location = useLocation();
 	const navigate = useNavigate();
 
+	const fileRef = useRef<HTMLInputElement>(null);
 	const [isOpen, setIsOpen] = useState(false);
 
 	const menuItems = [
@@ -17,6 +21,20 @@ export function Sidebar() {
 
 	const handleMovePage = (path: string) => {
 		navigate(`/${path}`);
+	};
+
+	const handleUploadExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append('file', file);
+
+		const res = await uploadFile(formData);
+
+		console.log(res);
+
+		e.target.value = '';
 	};
 
 	return (
@@ -36,7 +54,28 @@ export function Sidebar() {
 
 			{/* Sidebar */}
 			<aside
-				className={`fixed top-0 left-0 z-40 h-full w-240 transform border-r border-gray-200 bg-white transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
+				className={cn(
+					// Base positioning and size
+					'fixed top-0 left-0 z-40 h-full w-240',
+
+					// Scrolling and layout
+					'transform overflow-y-auto',
+
+					// Styling
+					'border-r border-gray-200 bg-white',
+
+					// Animations
+					'transition-transform duration-300 ease-in-out',
+
+					// Mobile responsive behavior
+					isOpen ? 'translate-x-0' : '-translate-x-full',
+
+					// Desktop responsive behavior
+					'md:sticky md:z-auto md:translate-x-0',
+
+					// Flex layout
+					'flex flex-col pb-20'
+				)}
 			>
 				<div className="p-30">
 					<h1 className="mx-auto w-fit text-blue-600">
@@ -44,7 +83,7 @@ export function Sidebar() {
 					</h1>
 				</div>
 
-				<nav className="px-16">
+				<nav className="flex-1 px-16">
 					<ul className="space-y-8">
 						{menuItems.map((item) => {
 							const Icon = item.icon;
@@ -63,6 +102,13 @@ export function Sidebar() {
 						})}
 					</ul>
 				</nav>
+
+				<div className="mt-auto px-16">
+					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()}>
+						엑셀 업로드
+					</Button>
+					<input type="file" ref={fileRef} className="hidden" onChange={handleUploadExcel} />
+				</div>
 			</aside>
 		</>
 	);

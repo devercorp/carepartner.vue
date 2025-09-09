@@ -25,3 +25,6 @@ dist-ssr
 
 .build-cache
 *storybook.log
+
+.env
+.env.*
