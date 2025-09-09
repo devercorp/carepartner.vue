@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { BarChart3, FileText, Menu, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '../ui/button';
@@ -10,7 +9,6 @@ export function Sidebar() {
 	const navigate = useNavigate();
 
 	const [isOpen, setIsOpen] = useState(false);
-	const fileRef = useRef<HTMLInputElement>(null);
 
 	const menuItems = [
 		{ id: 'dashboard', label: '대시보드', icon: BarChart3 },
@@ -19,25 +17,6 @@ export function Sidebar() {
 
 	const handleMovePage = (path: string) => {
 		navigate(`/${path}`);
-	};
-
-	const handleUploadExcelClick = () => {
-		const file = fileRef.current?.files?.[0];
-		if (!file) return;
-
-		const formData = new FormData();
-		formData.append('file', file);
-
-		const baseurl = import.meta.env.VITE_BASE_URL;
-
-		axios
-			.post(baseurl + '/api/dashboard/excel/upload', formData)
-			.then((res) => {
-				console.log(res);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
 	};
 
 	return (
@@ -84,13 +63,6 @@ export function Sidebar() {
 						})}
 					</ul>
 				</nav>
-
-				<div className="mt-80 flex flex-col gap-16 px-20">
-					<Button variant="default" className="w-full" onClick={handleUploadExcelClick}>
-						엑셀 업로드
-					</Button>
-					<input type="file" ref={fileRef} />
-				</div>
 			</aside>
 		</>
 	);
