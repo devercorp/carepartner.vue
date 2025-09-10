@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { formatDateToYYYYMMDD } from '@/utils/dateFormat';
 
 interface WeekPickerProps {
 	className?: string;
@@ -15,17 +16,33 @@ interface WeekPickerProps {
 }
 
 const WeekPicker = ({ className, disabled, placeholder, onChange, value, ...props }: WeekPickerProps) => {
-	// ISO 8601 기준 주차 계산
+	// 해당 연도 기준 주차 계산
 	const getWeekNumber = (date: Date) => {
-		const target = new Date(date.valueOf());
-		const dayNr = (date.getDay() + 6) % 7;
-		target.setDate(target.getDate() - dayNr + 3);
-		const firstThursday = target.valueOf();
-		target.setMonth(0, 1);
-		if (target.getDay() !== 4) {
-			target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
+		const year = date.getFullYear();
+		const jan1 = new Date(year, 0, 1);
+
+		// 1월 1일이 속한 주의 월요일 찾기
+		const dayOfWeek = jan1.getDay();
+		let firstMonday = new Date(jan1);
+
+		if (dayOfWeek === 0) {
+			firstMonday.setDate(jan1.getDate() + 1);
+		} else if (dayOfWeek === 1) {
+			firstMonday = new Date(jan1);
+		} else {
+			firstMonday.setDate(jan1.getDate() - (dayOfWeek - 1));
 		}
-		return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+
+		// 첫 번째 월요일이 이전 연도면 1월 1일을 첫 주로 설정
+		if (firstMonday.getFullYear() < year) {
+			firstMonday = new Date(year, 0, 1);
+		}
+
+		// 날짜와 첫 번째 월요일 사이의 차이 계산
+		const diffTime = date.getTime() - firstMonday.getTime();
+		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+		return Math.floor(diffDays / 7) + 1;
 	};
 
 	// 현재 날짜 기준으로 초기값 설정
@@ -41,34 +58,45 @@ const WeekPicker = ({ className, disabled, placeholder, onChange, value, ...prop
 	const [week, setWeek] = useState<number>(currentWeek);
 	const [yearInput, setYearInput] = useState<string>(currentYear.toString());
 
-	// 월요일 날짜 계산
+	// 월요일 날짜 계산 (해당 연도 기준)
 	const getMondayOfWeek = (selectedYear: number, selectedWeek: number) => {
-		// 해당 년도의 첫 번째 목요일 찾기 (ISO 8601 기준)
-		const jan4 = new Date(selectedYear, 0, 4);
-		const firstThursday = new Date(jan4);
-		const dayOfWeek = jan4.getDay();
-		const daysToThursday = dayOfWeek === 0 ? 4 : 4 - dayOfWeek;
-		firstThursday.setDate(jan4.getDate() + daysToThursday);
+		// 1주차는 해당 연도의 1월 1일이 속한 주로 정의
+		const jan1 = new Date(selectedYear, 0, 1); // 1월 1일
 
-		// 첫 번째 주의 월요일
-		const firstMonday = new Date(firstThursday);
-		firstMonday.setDate(firstThursday.getDate() - 3);
+		// 1월 1일이 무슨 요일인지 확인 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+		const dayOfWeek = jan1.getDay();
+
+		// 1월 1일이 속한 주의 월요일 찾기
+		let firstMonday = new Date(jan1);
+		if (dayOfWeek === 0) {
+			// 일요일이면 다음날(월요일)로
+			firstMonday.setDate(jan1.getDate() + 1);
+		} else if (dayOfWeek === 1) {
+			// 이미 월요일이면 그대로
+			firstMonday = new Date(jan1);
+		} else {
+			// 화요일~토요일이면 그 주의 월요일로 (이전 날짜)
+			firstMonday.setDate(jan1.getDate() - (dayOfWeek - 1));
+		}
 
 		// 선택된 주차의 월요일 계산
 		const mondayOfWeek = new Date(firstMonday);
+
 		mondayOfWeek.setDate(firstMonday.getDate() + (selectedWeek - 1) * 7);
+
+		// 만약 계산된 월요일이 해당 연도보다 이전이면, 1월 1일 반환
+		if (mondayOfWeek.getFullYear() < selectedYear) {
+			return new Date(selectedYear, 0, 1);
+		}
 
 		return mondayOfWeek;
 	};
 
 	// 선택된 년도에 따른 주차 범위 계산
 	const getWeeksInYear = (selectedYear: number) => {
-		// 12월 31일의 주차를 계산하여 해당 년도의 마지막 주차 확인
+		// 12월 31일의 주차 계산
 		const lastDay = new Date(selectedYear, 11, 31);
-		const lastWeek = getWeekNumber(lastDay);
-
-		// 12월 31일이 다음 해 1주차에 속할 경우 52주로 설정
-		return lastWeek === 1 ? 52 : lastWeek;
+		return getWeekNumber(lastDay);
 	};
 
 	// 표시할 날짜 값 생성
@@ -85,7 +113,12 @@ const WeekPicker = ({ className, disabled, placeholder, onChange, value, ...prop
 		const newYear = parseInt(inputValue);
 		if (!isNaN(newYear) && newYear > 0) {
 			setYear(newYear);
-			// 년도가 변경되면 주차 초기화하지 않고 유지
+
+			// 년도와 주차가 모두 선택되었으면 onChange 호출
+			if (week && onChange) {
+				const mondayDate = getMondayOfWeek(newYear, week);
+				onChange(formatDateToYYYYMMDD(mondayDate));
+			}
 		}
 	};
 
@@ -93,27 +126,41 @@ const WeekPicker = ({ className, disabled, placeholder, onChange, value, ...prop
 		const newWeek = parseInt(selectedWeek);
 		setWeek(newWeek);
 
+		console.log(year, newWeek);
+
 		if (year && onChange) {
-			onChange(`${year}-${newWeek}`);
+			const mondayDate = getMondayOfWeek(year, newWeek);
+			onChange(formatDateToYYYYMMDD(mondayDate));
 		}
+	};
+
+	// 날짜 문자열에서 년도와 주차 추출
+	const getYearWeekFromDate = (dateString: string) => {
+		const date = new Date(dateString);
+		const year = date.getFullYear();
+		const week = getWeekNumber(date) + 1;
+		return { year, week };
 	};
 
 	// 초기값 설정 및 외부 value 동기화
 	useEffect(() => {
 		if (value) {
-			const [yearStr, weekStr] = value.split('-');
-			if (yearStr && weekStr) {
-				const parsedYear = parseInt(yearStr);
-				const parsedWeek = parseInt(weekStr);
+			// YYYY-MM-DD 형식의 날짜 문자열에서 년도와 주차 추출
+
+			try {
+				const { year: parsedYear, week: parsedWeek } = getYearWeekFromDate(value);
 				setYear(parsedYear);
 				setWeek(parsedWeek);
 				setYearInput(parsedYear.toString());
+			} catch (error) {
+				console.error('Invalid date format:', value);
 			}
 		} else if (!value && onChange) {
 			// 초기값이 없으면 현재 날짜 기준으로 설정
-			onChange(`${currentYear}-${currentWeek}`);
+			const mondayDate = getMondayOfWeek(currentYear, currentWeek);
+			onChange(formatDateToYYYYMMDD(mondayDate));
 		}
-	}, [value, onChange, currentYear, currentWeek]);
+	}, []);
 
 	return (
 		<div className={cn('grid gap-2', className)} {...props}>
