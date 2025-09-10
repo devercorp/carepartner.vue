@@ -28,6 +28,7 @@ const DIVISION_TABS = [
 	{ label: '요양사', value: 'caregiver' },
 	{ label: '기관', value: 'institution' },
 	{ label: '아카데미', value: 'academy' },
+	{ label: '일반', value: 'general' },
 ] as const;
 
 const trendLines = [
@@ -42,13 +43,6 @@ const topTagsColumns = [
 	{ key: 'count', label: '건수', type: 'number' },
 	{ key: 'ratio', label: '비율', type: 'percentage' },
 	{ key: 'trend', label: '추이', type: 'trend' },
-];
-
-const dailyIssuesColumns = [
-	{ key: 'time', label: '시간', type: 'text' },
-	{ key: 'issue', label: '이슈', type: 'text' },
-	{ key: 'severity', label: '심각도', type: 'text' },
-	{ key: 'resolved', label: '상태', type: 'text' },
 ];
 
 // Editable Issue Details Table
@@ -185,7 +179,7 @@ const DashboardPage = () => {
 							color="orange"
 						/>
 						<KPICard
-							title="콜백 완료 건"
+							title="콜백 완료율"
 							value={currentKPIs.sameDayResolution.value}
 							trend={currentKPIs.sameDayResolution.trend}
 							icon={<CheckCircle className="h-20 w-20" />}
@@ -217,6 +211,7 @@ const DashboardPage = () => {
 								data={satisfactionTrendData}
 								lines={[{ dataKey: 'score', name: '상담 만족도', color: '#10B981' }]}
 								height={200}
+								range={[0, 5]}
 							/>
 						</CardContent>
 					</Card>

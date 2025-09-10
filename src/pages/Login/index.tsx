@@ -1,38 +1,43 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { BarChart3 } from 'lucide-react';
-import { useState } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import z from 'zod';
 
-import { Alert, AlertDescription } from '../../components/ui/alert';
+import { useLoginApi } from '@/apis/auth';
+import { LoginForm } from '@/apis/auth/type';
+
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Checkbox } from '../../components/ui/checkbox';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 
 const LoginPage = () => {
 	const navigate = useNavigate();
 
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [rememberMe, setRememberMe] = useState(false);
-	const [error, setError] = useState('');
-	const [isLoading, setIsLoading] = useState(false);
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<LoginForm>({
+		defaultValues: {
+			id: '',
+			password: '',
+		},
+		resolver: zodResolver(
+			z.object({
+				id: z.string().min(1, '아이디를 입력해주세요.'),
+				password: z.string().min(1, '비밀번호를 입력해주세요.'),
+			})
+		),
+	});
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setError('');
-		setIsLoading(true);
+	const { mutateAsync: mutateLogin, isPending } = useLoginApi();
 
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 1000));
+	const onSubmit: SubmitHandler<LoginForm> = async (data) => {
+		const res = await mutateLogin(data);
 
-		if (email === 'admin@admin.com' && password === 'admin1234') {
-			navigate('/');
-		} else {
-			setError('잘못된 이메일 또는 비밀번호입니다. admin@admin.com / admin1234 을 사용하세요');
-		}
-
-		setIsLoading(false);
+		console.log(res);
 	};
 
 	return (
@@ -49,23 +54,17 @@ const LoginPage = () => {
 				</CardHeader>
 
 				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-16">
-						{error && (
-							<Alert variant="destructive">
-								<AlertDescription>{error}</AlertDescription>
-							</Alert>
-						)}
-
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
 						<div className="space-y-8">
-							<Label htmlFor="email">이메일</Label>
+							<Label htmlFor="email">아이디</Label>
 							<Input
 								id="email"
-								type="email"
-								placeholder="이메일을 입력하세요"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
+								type="text"
+								placeholder="아이디를 입력하세요"
+								aria-invalid={!!errors.id}
+								{...register('id')}
 							/>
+							{errors.id && <p className="text-xl text-red-500">{errors.id.message}</p>}
 						</div>
 
 						<div className="space-y-8">
@@ -74,13 +73,13 @@ const LoginPage = () => {
 								id="password"
 								type="password"
 								placeholder="비밀번호를 입력하세요"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
+								aria-invalid={!!errors.password}
+								{...register('password')}
 							/>
+							{errors.password && <p className="text-xl text-red-500">{errors.password.message}</p>}
 						</div>
 
-						<div className="flex items-center space-x-8">
+						{/* <div className="flex items-center space-x-8">
 							<Checkbox
 								id="remember"
 								checked={rememberMe}
@@ -89,20 +88,20 @@ const LoginPage = () => {
 							<Label htmlFor="remember" className="text-14">
 								로그인 상태 유지
 							</Label>
-						</div>
+						</div> */}
 
-						<Button type="submit" className="w-full" disabled={isLoading}>
-							{isLoading ? '로그인 중...' : '로그인'}
+						<Button type="submit" className="w-full" disabled={isPending}>
+							{isPending ? '로그인 중...' : '로그인'}
 						</Button>
 					</form>
 
 					<div className="mt-24 rounded-lg bg-blue-50 p-16">
 						<p className="text-xl leading-24 text-blue-700">
-							<strong>데모 계정:</strong>
+							<strong>테스트 계정:</strong>
 							<br />
-							이메일: admin@consulting.com
+							이메일: admin
 							<br />
-							비밀번호: admin123
+							비밀번호: 1234
 						</p>
 					</div>
 				</CardContent>

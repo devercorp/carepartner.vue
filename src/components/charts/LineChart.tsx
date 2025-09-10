@@ -18,9 +18,10 @@ interface LineChartProps {
 	}[];
 	title?: string;
 	height?: number;
+	range?: [number, number];
 }
 
-export function LineChart({ data, lines, title, height = 300 }: LineChartProps) {
+export function LineChart({ data, lines, title, height = 300, range }: LineChartProps) {
 	return (
 		<div>
 			{title && <h3 className="mb-16">{title}</h3>}
@@ -28,7 +29,7 @@ export function LineChart({ data, lines, title, height = 300 }: LineChartProps) 
 				<RechartsLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
 					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 					<XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#666" />
-					<YAxis tick={{ fontSize: 12 }} stroke="#666" />
+					<YAxis tick={{ fontSize: 12 }} stroke="#666" domain={range} />
 					<Tooltip
 						contentStyle={{
 							backgroundColor: '#fff',

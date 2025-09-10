@@ -6,9 +6,9 @@ export const kpiData = {
 		caregiverInquiries: { value: '23건', trend: { direction: 'up' as const, value: '+8%', period: '전일 대비' } },
 		institutionInquiries: { value: '15건', trend: { direction: 'down' as const, value: '-5%', period: '전일 대비' } },
 		academyInquiries: { value: '9건', trend: { direction: 'up' as const, value: '+15%', period: '전일 대비' } },
-		chatRatio: { value: '68%', trend: { direction: 'up' as const, value: '+3%', period: '전일 대비' } },
-		phoneRatio: { value: '32%', trend: { direction: 'down' as const, value: '-3%', period: '전일 대비' } },
-		callbackProcessed: { value: '89%', trend: { direction: 'up' as const, value: '+5%', period: '전일 대비' } },
+		chatRatio: { value: '68%(10건)', trend: { direction: 'up' as const, value: '+3%', period: '전일 대비' } },
+		phoneRatio: { value: '32%(10건)', trend: { direction: 'down' as const, value: '-3%', period: '전일 대비' } },
+		callbackProcessed: { value: '20건', trend: { direction: 'up' as const, value: '+5%', period: '전일 대비' } },
 		sameDayResolution: { value: '76%', trend: { direction: 'neutral' as const, value: '0%', period: '전일 대비' } },
 		firstResponseTime: { value: '12m', trend: { direction: 'down' as const, value: '-8%', period: '전일 대비' } },
 		satisfactionScore: { value: '4.3%', trend: { direction: 'up' as const, value: '+0.2', period: '전일 대비' } },
@@ -18,9 +18,9 @@ export const kpiData = {
 		caregiverInquiries: { value: '189건', trend: { direction: 'up' as const, value: '+15%', period: '전주 대비' } },
 		institutionInquiries: { value: '98건', trend: { direction: 'up' as const, value: '+22%', period: '전주 대비' } },
 		academyInquiries: { value: '47건', trend: { direction: 'up' as const, value: '+25%', period: '전주 대비' } },
-		chatRatio: { value: '71%', trend: { direction: 'up' as const, value: '+4%', period: '전주 대비' } },
-		phoneRatio: { value: '29%', trend: { direction: 'down' as const, value: '-4%', period: '전주 대비' } },
-		callbackProcessed: { value: '92%', trend: { direction: 'up' as const, value: '+7%', period: '전주 대비' } },
+		chatRatio: { value: '71%(10건)', trend: { direction: 'up' as const, value: '+4%', period: '전주 대비' } },
+		phoneRatio: { value: '29%(10건)', trend: { direction: 'down' as const, value: '-4%', period: '전주 대비' } },
+		callbackProcessed: { value: '20건', trend: { direction: 'up' as const, value: '+7%', period: '전주 대비' } },
 		sameDayResolution: { value: '81%', trend: { direction: 'up' as const, value: '+3%', period: '전주 대비' } },
 		firstResponseTime: { value: '14m', trend: { direction: 'down' as const, value: '-12%', period: '전주 대비' } },
 		satisfactionScore: { value: '4.4%', trend: { direction: 'up' as const, value: '+0.3', period: '전주 대비' } },
@@ -30,9 +30,9 @@ export const kpiData = {
 		caregiverInquiries: { value: '823건', trend: { direction: 'up' as const, value: '+28%', period: '전월 대비' } },
 		institutionInquiries: { value: '412건', trend: { direction: 'up' as const, value: '+19%', period: '전월 대비' } },
 		academyInquiries: { value: '221건', trend: { direction: 'up' as const, value: '+31%', period: '전월 대비' } },
-		chatRatio: { value: '73%', trend: { direction: 'up' as const, value: '+6%', period: '전월 대비' } },
-		phoneRatio: { value: '27%', trend: { direction: 'down' as const, value: '-6%', period: '전월 대비' } },
-		callbackProcessed: { value: '94%', trend: { direction: 'up' as const, value: '+9%', period: '전월 대비' } },
+		chatRatio: { value: '73%(10건)', trend: { direction: 'up' as const, value: '+6%', period: '전월 대비' } },
+		phoneRatio: { value: '27%(10건)', trend: { direction: 'down' as const, value: '-6%', period: '전월 대비' } },
+		callbackProcessed: { value: '20건', trend: { direction: 'up' as const, value: '+9%', period: '전월 대비' } },
 		sameDayResolution: { value: '84%', trend: { direction: 'up' as const, value: '+8%', period: '전월 대비' } },
 		firstResponseTime: { value: '11m', trend: { direction: 'down' as const, value: '-18%', period: '전월 대비' } },
 		satisfactionScore: { value: '4.5%', trend: { direction: 'up' as const, value: '+0.4', period: '전월 대비' } },
@@ -53,10 +53,10 @@ export const tagDistribution = [
 ];
 
 export const dailyTrendData = [
-	{ period: '오늘', usage: 45, inconvenience: 23, error: 12, etc: 10 },
-	{ period: '어제', usage: 52, inconvenience: 28, error: 15, etc: 12 },
-	{ period: '2일전', usage: 48, inconvenience: 25, error: 13, etc: 11 },
 	{ period: '3일전', usage: 56, inconvenience: 32, error: 18, etc: 13 },
+	{ period: '2일전', usage: 48, inconvenience: 25, error: 13, etc: 11 },
+	{ period: '어제', usage: 52, inconvenience: 28, error: 15, etc: 12 },
+	{ period: '오늘', usage: 45, inconvenience: 23, error: 12, etc: 10 },
 ];
 
 export const weeklyTrendData = [
@@ -123,8 +123,8 @@ export const dailyIssues = [
 ];
 
 export const satisfactionTrendData = [
-	{ period: 'Week 1', score: 4.1 },
+	{ period: 'Week 1', score: 2.1 },
 	{ period: 'Week 2', score: 4.3 },
-	{ period: 'Week 3', score: 4.2 },
-	{ period: 'Week 4', score: 4.4 },
+	{ period: 'Week 3', score: 3.2 },
+	{ period: 'Week 4', score: 5 },
 ];
