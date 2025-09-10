@@ -1,5 +1,5 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
@@ -15,9 +15,9 @@ import { DataTable } from '../../components/dashboard/DataTable';
 import { KPICard } from '../../components/dashboard/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { channelData, tagDistribution, topInquiryTags, satisfactionTrendData } from '../../data/mockData';
+import { topInquiryTags } from '../../data/mockData';
 import IssueWriteBox from './components/IssueWriteBox';
-import { calculateTrend, valueUnitFormat } from './utils/dataFormat';
+import { calculateRatio, calculateTrend, valueUnitFormat } from './utils/dataFormat';
 
 const DIVISION_TABS = [
 	{ label: '전체', value: '' },
@@ -35,10 +35,10 @@ const trendLines = [
 ];
 
 const topTagsColumns = [
-	{ key: 'tag', label: '태그명', type: 'text' },
-	{ key: 'count', label: '건수', type: 'number' },
-	{ key: 'ratio', label: '비율', type: 'percentage' },
-	{ key: 'trend', label: '추이', type: 'trend' },
+	{ key: 'no', label: '번호', type: 'number' },
+	{ key: 'subCategory', label: '태그명', type: 'text' },
+	{ key: 'cnt', label: '건수', type: 'number' },
+	{ key: 'trendPct', label: '추이', type: 'trend' },
 ];
 
 const DashboardPage = () => {
@@ -57,17 +57,46 @@ const DashboardPage = () => {
 		startDate: selectedDate,
 	});
 
-	const period = useMemo(
+	const kpiPeriod = useMemo(
 		() => (activeDateTab === 'daily' ? '전일대비' : activeDateTab === 'weekly' ? '전주대비' : '전월대비'),
 		[activeDateTab]
 	);
-
-	const currentTopTags =
-		activeDateTab === 'daily' ? topInquiryTags.weekly : topInquiryTags[activeDateTab as keyof typeof topInquiryTags];
+	const surveyPeriod = useCallback(
+		(dayIndex: number) => {
+			if (activeDateTab === 'daily') {
+				return dayIndex === 0 ? '오늘' : dayIndex === 1 ? '어제' : `${dayIndex}일전`;
+			} else if (activeDateTab === 'weekly') {
+				return dayIndex === 0 ? '이번주' : dayIndex === 1 ? '지난주' : `${dayIndex}주전`;
+			} else {
+				return dayIndex === 0 ? '이번달' : dayIndex === 1 ? '지난달' : `${dayIndex}달전`;
+			}
+		},
+		[activeDateTab]
+	);
 
 	const handleDateChange = (date: string) => {
 		setSelectedDate(date);
 		setSearchParams({ startDate: date, dailyType: activeDateTab, categoryType: activeDivision });
+	};
+
+	const formatTotalTags = () => {
+		const channelData = dashboardData?.consultation.reduce(
+			(acc, curr) => {
+				acc[0] = { ...acc[0], value: acc[0].value + (curr.howToUse ?? 0) };
+				acc[1] = { ...acc[1], value: acc[1].value + (curr.error ?? 0) };
+				acc[2] = { ...acc[2], value: acc[2].value + (curr.inconvenience ?? 0) };
+				acc[3] = { ...acc[3], value: acc[3].value + (curr.etc ?? 0) };
+				return acc;
+			},
+			[
+				{ name: '사용법', value: 0, color: '#3B82F6' },
+				{ name: '오류문의', value: 0, color: '#10B981' },
+				{ name: '불편신고', value: 0, color: '#F59E0B' },
+				{ name: '기타', value: 0, color: '#0f172a' },
+			]
+		);
+
+		return channelData ?? [];
 	};
 
 	return (
@@ -132,7 +161,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(dashboardData?.dashTop.totalCount || 0, '건')}
 							trend={{
 								...calculateTrend(dashboardData?.dashTop.totalCount || 0, dashboardData?.dashTop.lastTotalCount || 0),
-								period,
+								period: kpiPeriod,
 							}}
 							icon={<Users className="h-20 w-20" />}
 							color="blue"
@@ -145,7 +174,7 @@ const DashboardPage = () => {
 									dashboardData?.dashTop.caregiverCount || 0,
 									dashboardData?.dashTop.lastCaregiverCount || 0
 								),
-								period,
+								period: kpiPeriod,
 							}}
 							color="blue"
 						/>
@@ -154,7 +183,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(dashboardData?.dashTop.orgCount || 0, '건')}
 							trend={{
 								...calculateTrend(dashboardData?.dashTop.orgCount || 0, dashboardData?.dashTop.lastOrgCount || 0),
-								period,
+								period: kpiPeriod,
 							}}
 							color="green"
 						/>
@@ -166,7 +195,7 @@ const DashboardPage = () => {
 									dashboardData?.dashTop.academyCount || 0,
 									dashboardData?.dashTop.lastAcademyCount || 0
 								),
-								period,
+								period: kpiPeriod,
 							}}
 							color="orange"
 						/>
@@ -176,20 +205,34 @@ const DashboardPage = () => {
 					<div className="grid grid-cols-1 gap-16 md:grid-cols-3 lg:grid-cols-6">
 						<KPICard
 							title="채팅 상담율"
-							value={valueUnitFormat(dashboardData?.dashTop.chatRate || 0, '%')}
+							value={valueUnitFormat(
+								calculateRatio(dashboardData?.dashTop.chatRate ?? 0, dashboardData?.dashTop.totalCount ?? 0),
+								'%'
+							)}
 							trend={{
-								...calculateTrend(dashboardData?.dashTop.chatRate || 0, dashboardData?.dashTop.lastChatRate || 0),
-								period,
+								...calculateTrend(
+									calculateRatio(dashboardData?.dashTop.chatRate ?? 0, dashboardData?.dashTop.totalCount ?? 0),
+									calculateRatio(dashboardData?.dashTop.lastChatRate ?? 0, dashboardData?.dashTop.lastTotalCount ?? 0),
+									'ratio'
+								),
+								period: kpiPeriod,
 							}}
 							icon={<MessageCircle className="h-20 w-20" />}
 							color="green"
 						/>
 						<KPICard
 							title="전화 상담율"
-							value={valueUnitFormat(dashboardData?.dashTop.callRate || 0, '%')}
+							value={valueUnitFormat(
+								calculateRatio(dashboardData?.dashTop.callRate ?? 0, dashboardData?.dashTop.totalCount ?? 0),
+								'%'
+							)}
 							trend={{
-								...calculateTrend(dashboardData?.dashTop.callRate || 0, dashboardData?.dashTop.lastCallRate || 0),
-								period,
+								...calculateTrend(
+									calculateRatio(dashboardData?.dashTop.callRate ?? 0, dashboardData?.dashTop.totalCount ?? 0),
+									calculateRatio(dashboardData?.dashTop.lastCallRate ?? 0, dashboardData?.dashTop.lastTotalCount ?? 0),
+									'ratio'
+								),
+								period: kpiPeriod,
 							}}
 							icon={<Phone className="h-20 w-20" />}
 							color="green"
@@ -199,7 +242,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(dashboardData?.dashTop.callBack || 0, '건')}
 							trend={{
 								...calculateTrend(dashboardData?.dashTop.callBack || 0, dashboardData?.dashTop.lastCallBack || 0),
-								period,
+								period: kpiPeriod,
 							}}
 							icon={<Phone className="h-20 w-20" />}
 							color="orange"
@@ -209,7 +252,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(dashboardData?.dashTop.callBackSuc || 0, '건')}
 							trend={{
 								...calculateTrend(dashboardData?.dashTop.callBackSuc || 0, dashboardData?.dashTop.lastCallBackSuc || 0),
-								period,
+								period: kpiPeriod,
 							}}
 							icon={<CheckCircle className="h-20 w-20" />}
 							color="purple"
@@ -219,7 +262,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(0 || 0, '%')}
 							trend={{
 								...calculateTrend(0, 0),
-								period,
+								period: kpiPeriod,
 							}}
 							icon={<Star className="h-20 w-20" />}
 							color="green"
@@ -230,7 +273,7 @@ const DashboardPage = () => {
 							value={valueUnitFormat(0 || 0, '분')}
 							trend={{
 								...calculateTrend(0, 0),
-								period,
+								period: kpiPeriod,
 							}}
 							icon={<Clock className="h-20 w-20" />}
 							color="purple"
@@ -244,8 +287,13 @@ const DashboardPage = () => {
 								</CardHeader>
 								<CardContent>
 									<LineChart
-										data={satisfactionTrendData}
-										lines={[{ dataKey: 'score', name: '상담 만족도', color: '#10B981' }]}
+										data={
+											dashboardData?.surveyOverallAvg.reverse().map((item) => ({
+												...item,
+												period: surveyPeriod(item.dayIndex),
+											})) ?? []
+										}
+										lines={[{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' }]}
 										height={200}
 										range={[0, 5]}
 									/>
@@ -277,7 +325,7 @@ const DashboardPage = () => {
 										<CardTitle>전체 상담 유형 분포</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<PieChart data={channelData} dataKey="value" height={300} showDataTable />
+										<PieChart data={formatTotalTags()} dataKey="value" height={300} showDataTable />
 									</CardContent>
 								</Card>
 							</div>
@@ -291,18 +339,11 @@ const DashboardPage = () => {
 						<div className="space-y-24">
 							<DataTable
 								title={`인입이 높은 태그 top 5 (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
-								data={currentTopTags}
+								data={dashboardData?.topTags.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
 								columns={topTagsColumns}
 							/>
 
-							{activeDateTab === 'monthly' && (
-								// <div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
-								// 	<DataTable
-								// 		title="인입이 높은 태그 top 5"
-								// 		data={continuouslyIncreasingTags}
-								// 		columns={increasingTagsColumns}
-								// 	/>
-
+							{/* {activeDateTab === 'monthly' && (
 								<Card>
 									<CardHeader>
 										<CardTitle>지속적으로 증가하는 태그 top 5</CardTitle>
@@ -311,8 +352,7 @@ const DashboardPage = () => {
 										<PieChart data={tagDistribution} dataKey="value" height={300} />
 									</CardContent>
 								</Card>
-								// 		</div>
-							)}
+							)} */}
 						</div>
 					)}
 				</TabsContent>

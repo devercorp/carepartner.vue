@@ -62,4 +62,20 @@ export type DashboardResponseType = {
 		error?: number; // 오류
 		etc?: number; // 기타
 	}[];
+
+	surveyOverallAvg: {
+		avgOverallSat: number;
+		dayIndex: number;
+	}[];
+
+	incMonthTop: {
+		cnt: number;
+		subCategory: string;
+	}[];
+
+	topTags: {
+		subCategory: string;
+		cnt: number;
+		trendPct?: number;
+	}[];
 };
