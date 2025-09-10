@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import AdminPage from '@/pages/Admin';
 import DashboardPage from '@/pages/Dashboard';
 import FormResponsePage from '@/pages/FormResponse';
+import FormSuccessPage from '@/pages/FormSuccess';
 import FormTemplatePage from '@/pages/FormTemplate';
 import LoginPage from '@/pages/Login';
 
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
 	{
 		path: '/form-template',
 		element: <FormTemplatePage />,
+	},
+	{
+		path: '/form-success',
+		element: <FormSuccessPage />,
 	},
 	{
 		path: '*',

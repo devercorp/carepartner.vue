@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Loader2 } from 'lucide-react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import z from 'zod';
@@ -91,7 +91,7 @@ const LoginPage = () => {
 						</div> */}
 
 						<Button type="submit" className="w-full" disabled={isPending}>
-							{isPending ? '로그인 중...' : '로그인'}
+							{isPending ? <Loader2 className="size-24 animate-spin" /> : '로그인'}
 						</Button>
 					</form>
 
