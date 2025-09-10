@@ -1,7 +1,9 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
 import { useState } from 'react';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import DatePicker from '@/components/common/DatePicker';
+import MonthPicker from '@/components/common/DatePicker/MonthPicker';
+import WeekPicker from '@/components/common/DatePicker/WeekPicker';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -96,19 +98,10 @@ const DashboardPage = () => {
 						<TabsTrigger value="weekly">주간</TabsTrigger>
 						<TabsTrigger value="monthly">월간</TabsTrigger>
 					</TabsList>
-					<div className="flex gap-16 bg-white">
-						<Select>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="주간" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="1">1주차</SelectItem>
-								<SelectItem value="2">2주차</SelectItem>
-								<SelectItem value="3">3주차</SelectItem>
-								<SelectItem value="4">4주차</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
+
+					{activeDateTab === 'daily' && <DatePicker />}
+					{activeDateTab === 'weekly' && <WeekPicker />}
+					{activeDateTab === 'monthly' && <MonthPicker />}
 				</div>
 
 				<TabsContent value={activeDateTab} className="space-y-24">
