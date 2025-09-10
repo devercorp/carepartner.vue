@@ -6,6 +6,7 @@ import z from 'zod';
 
 import { useLoginApi } from '@/apis/auth';
 import { LoginForm } from '@/apis/auth/type';
+import useTokenStore from '@/stores/useTokenStore';
 
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -14,6 +15,8 @@ import { Label } from '../../components/ui/label';
 
 const LoginPage = () => {
 	const navigate = useNavigate();
+
+	const tokenStore = useTokenStore();
 
 	const {
 		register,
@@ -37,7 +40,10 @@ const LoginPage = () => {
 	const onSubmit: SubmitHandler<LoginForm> = async (data) => {
 		const res = await mutateLogin(data);
 
-		console.log(res);
+		if (res.status === 200) {
+			tokenStore.setToken(res.data.accessToken, res.data.refreshToken);
+			navigate('/dashboard');
+		}
 	};
 
 	return (

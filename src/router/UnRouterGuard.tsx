@@ -2,18 +2,18 @@ import { Navigate } from 'react-router-dom';
 
 import useTokenStore from '@/stores/useTokenStore';
 
-interface RouterGuardProps {
+interface UnRouterGuardProps {
 	children: React.ReactNode;
 }
 
-const RouterGuard = ({ children }: RouterGuardProps) => {
+const UnRouterGuard = ({ children }: UnRouterGuardProps) => {
 	const tokenStore = useTokenStore();
 
-	if (!tokenStore.isLogin()) {
-		return <Navigate to="/login" />;
+	if (tokenStore.isLogin()) {
+		return <Navigate to="/" />;
 	}
 
 	return children;
 };
 
-export default RouterGuard;
+export default UnRouterGuard;

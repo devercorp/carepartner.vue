@@ -9,6 +9,7 @@ import LoginPage from '@/pages/Login';
 
 import DefaultLayout from '../components/layout/Layout';
 import RouterGuard from './RouterGuard';
+import UnRouterGuard from './UnRouterGuard';
 
 const router = createBrowserRouter([
 	{
@@ -38,7 +39,11 @@ const router = createBrowserRouter([
 	},
 	{
 		path: '/login',
-		element: <LoginPage />,
+		element: (
+			<UnRouterGuard>
+				<LoginPage />
+			</UnRouterGuard>
+		),
 	},
 	{
 		path: '/form-template',

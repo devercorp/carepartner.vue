@@ -1,6 +1,7 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
 import { useState } from 'react';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -89,11 +90,26 @@ const DashboardPage = () => {
 				value={activeDateTab}
 				onValueChange={(value) => setActiveDateTab(value as 'daily' | 'weekly' | 'monthly')}
 			>
-				<TabsList>
-					<TabsTrigger value="daily">일간</TabsTrigger>
-					<TabsTrigger value="weekly">주간</TabsTrigger>
-					<TabsTrigger value="monthly">월간</TabsTrigger>
-				</TabsList>
+				<div className="flex items-center gap-16">
+					<TabsList>
+						<TabsTrigger value="daily">일간</TabsTrigger>
+						<TabsTrigger value="weekly">주간</TabsTrigger>
+						<TabsTrigger value="monthly">월간</TabsTrigger>
+					</TabsList>
+					<div className="flex gap-16 bg-white">
+						<Select>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder="주간" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="1">1주차</SelectItem>
+								<SelectItem value="2">2주차</SelectItem>
+								<SelectItem value="3">3주차</SelectItem>
+								<SelectItem value="4">4주차</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+				</div>
 
 				<TabsContent value={activeDateTab} className="space-y-24">
 					{/* Secondary KPI Cards */}
@@ -202,7 +218,7 @@ const DashboardPage = () => {
 								<CardTitle>전체 상담 유형 분포</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<PieChart data={channelData} dataKey="value" height={300} />
+								<PieChart data={channelData} dataKey="value" height={300} showDataTable />
 							</CardContent>
 						</Card>
 					</div>

@@ -2,8 +2,10 @@ import { BarChart3, FileText, Menu, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useLogoutApi } from '@/apis/auth';
 import { uploadFile } from '@/apis/file';
 import { cn } from '@/lib/utils';
+import useTokenStore from '@/stores/useTokenStore';
 
 import { Button } from '../ui/button';
 
@@ -13,6 +15,10 @@ export function Sidebar() {
 
 	const fileRef = useRef<HTMLInputElement>(null);
 	const [isOpen, setIsOpen] = useState(false);
+
+	const tokenStore = useTokenStore();
+
+	const { mutateAsync: mutateLogout } = useLogoutApi();
 
 	const menuItems = [
 		{ id: 'dashboard', label: '대시보드', icon: BarChart3 },
@@ -35,6 +41,14 @@ export function Sidebar() {
 		console.log(res);
 
 		e.target.value = '';
+	};
+
+	const handleLogout = async () => {
+		const res = await mutateLogout({ refreshToken: tokenStore.refreshToken });
+		if (res.status === 200) {
+			tokenStore.reset();
+			navigate('/login');
+		}
 	};
 
 	return (
@@ -103,11 +117,15 @@ export function Sidebar() {
 					</ul>
 				</nav>
 
-				<div className="mt-auto px-16">
+				<div className="mt-auto flex flex-col gap-8 px-16">
 					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()}>
 						엑셀 업로드
 					</Button>
 					<input type="file" ref={fileRef} className="hidden" onChange={handleUploadExcel} />
+
+					<Button variant="outline" className="w-full" onClick={handleLogout}>
+						로그아웃
+					</Button>
 				</div>
 			</aside>
 		</>
