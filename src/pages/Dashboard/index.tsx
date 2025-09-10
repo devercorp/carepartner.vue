@@ -8,9 +8,7 @@ import { PieChart } from '../../components/charts/PieChart';
 import { DataTable } from '../../components/dashboard/DataTable';
 import { KPICard } from '../../components/dashboard/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Textarea } from '../../components/ui/textarea';
 import {
 	kpiData,
 	channelData,
@@ -18,10 +16,10 @@ import {
 	weeklyTrendData,
 	monthlyTrendData,
 	topInquiryTags,
-	dailyIssues,
 	satisfactionTrendData,
 	dailyTrendData,
 } from '../../data/mockData';
+import IssueWriteBox from './components/IssueWriteBox';
 
 const DIVISION_TABS = [
 	{ label: '전체', value: 'total' },
@@ -45,20 +43,6 @@ const topTagsColumns = [
 	{ key: 'trend', label: '추이', type: 'trend' },
 ];
 
-// Editable Issue Details Table
-const ISSUE_ROWS = [
-	{ group: '케어파트너', subGroup: '요양사' },
-	{ group: '케어파트너', subGroup: '기관' },
-	{ group: '아카데미', subGroup: '' },
-] as const;
-
-type IssueKey = `${(typeof ISSUE_ROWS)[number]['group']}|${(typeof ISSUE_ROWS)[number]['subGroup']}`;
-
-type IssueCell = {
-	detail: string;
-	direction: string;
-};
-
 const DashboardPage = () => {
 	const [activeDivision, setActiveDivision] = useState<(typeof DIVISION_TABS)[number]['value']>('total');
 	const [activeDateTab, setActiveDateTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -70,22 +54,8 @@ const DashboardPage = () => {
 	const currentTopTags =
 		activeDateTab === 'daily' ? topInquiryTags.weekly : topInquiryTags[activeDateTab as keyof typeof topInquiryTags];
 
-	// Local state to edit per-row "상세" and "개선 방향성"
-	const [issueCells, setIssueCells] = useState<Record<IssueKey, IssueCell>>(() => {
-		const INITIAL_TEXT = '';
-		const initialEntries = ISSUE_ROWS.map((row) => {
-			const key = `${row.group}|${row.subGroup}` as IssueKey;
-			return [key, { detail: INITIAL_TEXT, direction: INITIAL_TEXT } satisfies IssueCell] as const;
-		});
-		return Object.fromEntries(initialEntries) as Record<IssueKey, IssueCell>;
-	});
-
-	const handleCellChange = (key: IssueKey, field: keyof IssueCell, value: string) => {
-		setIssueCells((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
-	};
-
 	return (
-		<div className="space-y-24 p-24">
+		<div className="space-y-24 p-24 pb-100">
 			<div className="flex items-center justify-between">
 				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
 				<div className="text-muted-foreground text-2xl">마지막 업데이트 날짜: {new Date().toLocaleString()}</div>
@@ -237,108 +207,7 @@ const DashboardPage = () => {
 						</Card>
 					</div>
 
-					{/* Daily Specific Content */}
-					{activeDateTab === 'daily' && (
-						<div className="space-y-24">
-							<Card>
-								<CardHeader>
-									<CardTitle>응대 Issue 문의 상세</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<Table>
-										<TableHeader>
-											<TableRow className="bg-gray-100">
-												<TableHead className="w-[160px] text-center">구분</TableHead>
-												<TableHead className="text-center">응대 Issue 상세</TableHead>
-												<TableHead className="text-center">개선 방향성</TableHead>
-											</TableRow>
-										</TableHeader>
-										<TableBody>
-											{/* 케어파트너 - 2 rows with rowSpan for group */}
-											<TableRow>
-												<TableCell rowSpan={2} className="align-top">
-													<div className="flex h-full flex-1 gap-4">
-														<div className="font-semibold">케어파트너</div>
-														<div className="text-muted-foreground grid grid-rows-2 gap-4">
-															<div className="grid-row-1 font-semibold">요양사</div>
-															<div className="grid-row-1 font-semibold">기관</div>
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'케어파트너'}|${'요양사'}` as IssueKey].detail}
-														onChange={(e) =>
-															handleCellChange(`${'케어파트너'}|${'요양사'}` as IssueKey, 'detail', e.target.value)
-														}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'케어파트너'}|${'요양사'}` as IssueKey].direction}
-														onChange={(e) =>
-															handleCellChange(`${'케어파트너'}|${'요양사'}` as IssueKey, 'direction', e.target.value)
-														}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'케어파트너'}|${'기관'}` as IssueKey].detail}
-														onChange={(e) =>
-															handleCellChange(`${'케어파트너'}|${'기관'}` as IssueKey, 'detail', e.target.value)
-														}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'케어파트너'}|${'기관'}` as IssueKey].direction}
-														onChange={(e) =>
-															handleCellChange(`${'케어파트너'}|${'기관'}` as IssueKey, 'direction', e.target.value)
-														}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-											</TableRow>
-
-											{/* 아카데미 - single row */}
-											<TableRow>
-												<TableCell className="w-[160px] align-top">
-													<div className="font-semibold">아카데미</div>
-												</TableCell>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'아카데미'}|` as IssueKey].detail}
-														onChange={(e) => handleCellChange(`${'아카데미'}|` as IssueKey, 'detail', e.target.value)}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-												<TableCell>
-													<Textarea
-														value={issueCells[`${'아카데미'}|` as IssueKey].direction}
-														onChange={(e) =>
-															handleCellChange(`${'아카데미'}|` as IssueKey, 'direction', e.target.value)
-														}
-														placeholder="-"
-														className="min-h-[48px]"
-													/>
-												</TableCell>
-											</TableRow>
-										</TableBody>
-									</Table>
-								</CardContent>
-							</Card>
-						</div>
-					)}
+					<IssueWriteBox />
 
 					{/* Weekly/Monthly Specific Content */}
 					{(activeDateTab === 'weekly' || activeDateTab === 'monthly') && (
