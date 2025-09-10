@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Menu, X } from 'lucide-react';
+import { BarChart3, FileText, Loader2, Menu, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -18,7 +18,7 @@ export function Sidebar() {
 
 	const tokenStore = useTokenStore();
 
-	const { mutateAsync: mutateLogout } = useLogoutApi();
+	const { mutateAsync: mutateLogout, isPending } = useLogoutApi();
 
 	const menuItems = [
 		{ id: 'dashboard', label: '대시보드', icon: BarChart3 },
@@ -118,8 +118,8 @@ export function Sidebar() {
 				</nav>
 
 				<div className="mt-auto flex flex-col gap-8 px-16">
-					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()}>
-						엑셀 업로드
+					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()} disabled={isPending}>
+						{isPending ? <Loader2 className="size-24 animate-spin" /> : '엑셀 업로드'}
 					</Button>
 					<input type="file" ref={fileRef} className="hidden" onChange={handleUploadExcel} />
 
