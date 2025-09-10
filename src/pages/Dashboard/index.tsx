@@ -325,7 +325,7 @@ const DashboardPage = () => {
 										<CardTitle>전체 상담 유형 분포</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<PieChart data={formatTotalTags()} dataKey="value" height={300} showDataTable />
+										<PieChart data={formatTotalTags()} dataKey="value" height={300} />
 									</CardContent>
 								</Card>
 							</div>

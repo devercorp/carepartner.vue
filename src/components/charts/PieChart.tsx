@@ -3,25 +3,21 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
 interface PieChartProps {
 	data: any[];
 	dataKey: string;
-	nameKey?: string;
 	title?: string;
 	colors?: string[];
 	height?: number;
 	showLegend?: boolean;
 	showLabels?: boolean;
-	showDataTable?: boolean;
 }
 
 export function PieChart({
 	data,
 	dataKey,
-	nameKey = 'name',
 	title,
 	colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#6B7280'],
 	height = 300,
 	showLegend = true,
 	showLabels = true,
-	showDataTable = false,
 }: PieChartProps) {
 	// 커스텀 라벨 렌더링 (값과 퍼센트 모두 표시)
 	const renderCustomLabel = (entry: any) => {
