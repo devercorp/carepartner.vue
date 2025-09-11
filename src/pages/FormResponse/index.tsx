@@ -1,94 +1,81 @@
-import { Search, Filter, Download, Eye, MessageCircle, ExternalLink } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
+import { useGetFormResponseList } from '@/apis/form';
+import DatePicker from '@/components/common/DatePicker';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
-interface FormResponse {
-	id: string;
-	submittedAt: string;
-	contact: string;
-	satisfaction: number;
-	accuracy: number;
-	record: string;
-	content: string;
-}
-
-const mockResponses: FormResponse[] = [
-	{
-		id: '4',
-		submittedAt: '2024-12-20 09:15',
-		contact: '010-1234-5678',
-		satisfaction: 5,
-		accuracy: 5,
-		record: '문의 내역',
-		content: '문의 내역',
-	},
-	{
-		id: '3',
-		submittedAt: '2024-12-20 10:30',
-		contact: '010-1234-5678',
-		satisfaction: 5,
-		accuracy: 5,
-		record: '문의 내역',
-		content: '문의 내역',
-	},
-	{
-		id: '2',
-		submittedAt: '2024-12-19 14:22',
-		contact: '010-1234-5678',
-		satisfaction: 5,
-		accuracy: 5,
-		record: '문의 내역',
-		content: '문의 내역',
-	},
-	{
-		id: '1',
-		submittedAt: '2024-12-19 16:45',
-		contact: '010-1234-5678',
-		satisfaction: 5,
-		accuracy: 5,
-		record: '문의 내역',
-		content: '문의 내역',
-	},
+const PAGE_SIZE_OPTIONS = [
+	{ value: '10', label: '10개씩 보기' },
+	{ value: '20', label: '20개씩 보기' },
+	{ value: '50', label: '50개씩 보기' },
+	{ value: '100', label: '100개씩 보기' },
 ];
 
 const FormResponsePage = () => {
-	const getPriorityColor = (priority: number) => {
+	const getPriorityColor = (priority: string) => {
 		switch (priority) {
-			case 5:
-				return 'bg-red-100 text-red-800';
-			case 4:
-			case 3:
+			case '매우만족':
+				return 'bg-green-100 text-green-800';
+			case '만족':
+			case '보통':
 				return 'bg-yellow-100 text-yellow-800';
-			case 2:
-			case 1:
-				return 'bg-gray-100 text-gray-800';
+			case '불만족':
+			case '매우불만족':
+				return 'bg-red-100 text-red-800';
 			default:
-				return 'bg-gray-100 text-gray-800';
+				return 'bg-red-100 text-red-800';
 		}
 	};
 
-	// const filteredResponses = mockResponses.filter((response) => {
-	// 	const matchesSearch =
-	// 		response.respondentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-	// 		response.respondentEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-	// 		response.summary.toLowerCase().includes(searchTerm.toLowerCase());
+	const [searchParams, setSearchParams] = useSearchParams();
 
-	// 	const matchesStatus = statusFilter === 'all' || response.status === statusFilter;
-	// 	const matchesCategory = categoryFilter === 'all' || response.category === categoryFilter;
-	// 	const matchesTab = activeTab === 'all' || response.status === activeTab;
+	// 날짜 검색 상태
+	const [startDate, setStartDate] = useState<string>(searchParams.get('startDate') || '');
+	const [endDate, setEndDate] = useState<string>(searchParams.get('endDate') || '');
 
-	// 	return matchesSearch && matchesStatus && matchesCategory && matchesTab;
-	// });
+	// 페이지네이션 상태
+	const [currentPage, setCurrentPage] = useState<number>(1);
+	const [pageSize, setPageSize] = useState<string>('10');
+
+	const { data: formResponseList, isLoading } = useGetFormResponseList({
+		page: currentPage,
+		size: parseInt(pageSize),
+		startDate: startDate,
+		endDate: endDate,
+	});
 
 	const handleMoveFormTemplate = () => {
 		window.open(window.location.origin + '/form-template', '_blank');
+	};
+
+	const handlePageSizeChange = (newSize: string) => {
+		setPageSize(newSize);
+		setCurrentPage(1); // 페이지 사이즈 변경 시 첫 페이지로 이동
+	};
+
+	const handlePageChange = (page: number) => {
+		setCurrentPage(page);
+	};
+
+	// 페이지네이션 계산
+	const totalPages = formResponseList ? Math.ceil(formResponseList.totalCount / parseInt(pageSize)) : 0;
+	const startIndex = (currentPage - 1) * parseInt(pageSize) + 1;
+	const endIndex = Math.min(currentPage * parseInt(pageSize), formResponseList?.totalCount || 0);
+
+	// 페이지 번호 생성 (현재 페이지 기준으로 5개 페이지까지 표시)
+	const getPageNumbers = () => {
+		const maxVisiblePages = 5;
+		const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+		const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+		return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 	};
 
 	return (
@@ -107,53 +94,64 @@ const FormResponsePage = () => {
 				</div>
 			</div>
 
-			{/* Filters */}
-			{/* <Card>
-				<CardContent className="px-16">
-					<div className="flex flex-col gap-16 sm:flex-row">
-						<div className="flex-1">
-							<div className="relative">
-								<Search className="absolute top-1/2 left-12 h-16 w-16 -translate-y-1/2 transform text-gray-400" />
-								<Input
-									placeholder="이름, 이메일, 요약으로 검색..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-40"
-								/>
-							</div>
+			{/* 날짜 검색 필터 */}
+			<Card>
+				<CardContent className="p-16">
+					<div className="flex items-center gap-16">
+						<div className="flex items-center gap-8">
+							<span className="text-xl font-medium whitespace-nowrap">검색 기간:</span>
+							<DatePicker
+								value={startDate}
+								onChange={(date) => {
+									setStartDate(date);
+									setSearchParams({ startDate: date, endDate: endDate });
+									setCurrentPage(1);
+								}}
+								placeholder="시작일"
+								maxDate={endDate ? new Date(endDate) : undefined}
+							/>
+							<span className="text-xl">~</span>
+							<DatePicker
+								value={endDate}
+								onChange={(date) => {
+									setEndDate(date);
+									setSearchParams({ startDate: startDate, endDate: date });
+									setCurrentPage(1);
+								}}
+								placeholder="종료일"
+								minDate={startDate ? new Date(startDate) : undefined}
+							/>
 						</div>
-
-						<Select value={statusFilter} onValueChange={setStatusFilter}>
-							<SelectTrigger className="w-160">
-								<SelectValue placeholder="Status" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">전체 상태</SelectItem>
-								<SelectItem value="new">신규</SelectItem>
-								<SelectItem value="reviewed">검토됨</SelectItem>
-								<SelectItem value="responded">응답함</SelectItem>
-								<SelectItem value="closed">완료</SelectItem>
-							</SelectContent>
-						</Select>
-
-						<Select value={categoryFilter} onValueChange={setCategoryFilter}>
-							<SelectTrigger className="w-160">
-								<SelectValue placeholder="Category" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">전체 분야</SelectItem>
-								<SelectItem value="caregiver">간병인</SelectItem>
-								<SelectItem value="institution">기관</SelectItem>
-								<SelectItem value="academy">교육</SelectItem>
-							</SelectContent>
-						</Select>
+						{/* <Button onClick={handleSearch} size="sm">
+							<Search className="mr-8 h-16 w-16" />
+							검색
+						</Button> */}
 					</div>
 				</CardContent>
-			</Card> */}
+			</Card>
 
 			<Card>
 				<CardHeader>
-					<CardTitle>응답 목록</CardTitle>
+					<div className="flex items-center justify-between">
+						<CardTitle>응답 목록</CardTitle>
+						<div className="flex items-center gap-16">
+							{/* 총 항목 수 표시 */}
+							<span className="text-muted-foreground text-xl">총 {formResponseList?.totalCount || 0}개의 응답</span>
+							{/* 페이지 사이즈 선택 */}
+							<Select value={pageSize} onValueChange={handlePageSizeChange}>
+								<SelectTrigger className="w-140">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{PAGE_SIZE_OPTIONS.map((option) => (
+										<SelectItem key={option.value} value={option.value}>
+											{option.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent>
 					<Table>
@@ -164,47 +162,108 @@ const FormResponsePage = () => {
 								<TableHead>전화번호</TableHead>
 								<TableHead>상담 만족도</TableHead>
 								<TableHead>대응 만족도</TableHead>
-								<TableHead>비고</TableHead>
-								<TableHead>작업</TableHead>
+								<TableHead>내용</TableHead>
+								{/* <TableHead>작업</TableHead> */}
 							</TableRow>
 						</TableHeader>
+
 						<TableBody>
-							{mockResponses.map((response) => (
-								<TableRow key={response.id}>
-									<TableCell className="font-mono text-xl">{response.id}</TableCell>
-									<TableCell className="text-xl">{response.submittedAt}</TableCell>
-									<TableCell>
-										<div className="font-medium">{response.contact}</div>
-									</TableCell>
-									<TableCell>
-										<Badge variant="outline" className="capitalize">
-											{response.satisfaction}
-										</Badge>
-									</TableCell>
-									<TableCell>
-										<Badge className={getPriorityColor(response.accuracy)}>{response.accuracy}</Badge>
-									</TableCell>
-									<TableCell className="max-w-xs truncate" title={response.content}>
-										{response.content}
-									</TableCell>
-									<TableCell>
-										<div className="flex gap-4">
-											<Button variant="ghost" size="sm">
-												<Eye className="h-16 w-16" />
-											</Button>
-											<Button variant="ghost" size="sm">
-												<MessageCircle className="h-16 w-16" />
-											</Button>
+							{isLoading ? (
+								<TableRow>
+									<TableCell colSpan={7} className="py-32" rowSpan={7}>
+										<div className="flex justify-center">
+											<Loader2 className="size-28 animate-spin" />
 										</div>
 									</TableCell>
 								</TableRow>
-							))}
+							) : formResponseList?.items && formResponseList.items.length > 0 ? (
+								formResponseList.items.map((response) => (
+									<TableRow key={response.surveyId}>
+										<TableCell className="font-mono text-xl">{response.surveyId}</TableCell>
+										<TableCell className="text-xl">{response.createdAt}</TableCell>
+										<TableCell>
+											<div className="font-medium">{response.phone}</div>
+										</TableCell>
+										<TableCell>
+											<Badge variant="outline" className={getPriorityColor(response.overallSatText)}>
+												{response.overallSatText}
+											</Badge>
+										</TableCell>
+										<TableCell>
+											<Badge variant="outline" className={getPriorityColor(response.answerAccuracyText)}>
+												{response.answerAccuracyText}
+											</Badge>
+										</TableCell>
+										<TableCell className="max-w-xs truncate" title={response.freeComment}>
+											{response.freeComment || '-'}
+										</TableCell>
+										{/* <TableCell>
+											<div className="flex gap-4">
+												<Button variant="ghost" size="sm">
+													<Eye className="h-16 w-16" />
+												</Button>
+												<Button variant="ghost" size="sm">
+													<MessageCircle className="h-16 w-16" />
+												</Button>
+											</div>
+										</TableCell> */}
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell colSpan={7} className="py-32 text-center">
+										<div className="text-muted-foreground">검색 조건에 맞는 응답이 없습니다.</div>
+									</TableCell>
+								</TableRow>
+							)}
 						</TableBody>
 					</Table>
 
-					{mockResponses.length === 0 && (
-						<div className="text-muted-foreground py-32 text-center">검색 조건에 맞는 응답이 없습니다.</div>
-					)}
+					{/* 페이지네이션 */}
+					<div className="mt-16 flex items-center justify-between">
+						<div className="text-muted-foreground text-xl">
+							{startIndex}-{endIndex} / {formResponseList?.totalCount || 0}개 표시
+						</div>
+
+						<div className="flex items-center gap-8">
+							{/* 이전 페이지 버튼 */}
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => handlePageChange(currentPage - 1)}
+								disabled={currentPage === 1}
+							>
+								<ChevronLeft className="h-16 w-16" />
+								이전
+							</Button>
+
+							{/* 페이지 번호 버튼들 */}
+							<div className="flex gap-4">
+								{getPageNumbers().map((pageNumber) => (
+									<Button
+										key={pageNumber}
+										variant={currentPage === pageNumber ? 'default' : 'outline'}
+										size="sm"
+										onClick={() => handlePageChange(pageNumber)}
+										className="min-w-32"
+									>
+										{pageNumber}
+									</Button>
+								))}
+							</div>
+
+							{/* 다음 페이지 버튼 */}
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => handlePageChange(currentPage + 1)}
+								disabled={currentPage === totalPages}
+							>
+								다음
+								<ChevronRight className="h-16 w-16" />
+							</Button>
+						</div>
+					</div>
 				</CardContent>
 			</Card>
 		</div>

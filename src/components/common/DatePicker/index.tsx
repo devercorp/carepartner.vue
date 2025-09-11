@@ -18,6 +18,14 @@ interface DatePickerProps {
 	 * 오늘 이전 날짜는 선택 불가능
 	 */
 	dateDisabledTime?: Date;
+	/**
+	 * 최소 선택 가능 날짜
+	 */
+	minDate?: Date;
+	/**
+	 * 최대 선택 가능 날짜
+	 */
+	maxDate?: Date;
 }
 
 const DatePicker = ({
@@ -27,6 +35,8 @@ const DatePicker = ({
 	value,
 	disabled,
 	dateDisabledTime,
+	minDate,
+	maxDate,
 	...props
 }: DatePickerProps) => {
 	// 오늘 날짜를 초기값으로 설정
@@ -53,6 +63,32 @@ const DatePicker = ({
 		}
 	}, [value, onChange]);
 
+	// 날짜 제한 설정
+	const getDisabledDates = () => {
+		const disabledRanges = [];
+
+		// 기존 dateDisabledTime 제한
+		if (dateDisabledTime) {
+			disabledRanges.push({ from: new Date(1950, 1, 1), to: dateDisabledTime });
+		}
+
+		// minDate 제한 (최소 날짜 이전 비활성화)
+		if (minDate) {
+			const dayBeforeMin = new Date(minDate);
+			dayBeforeMin.setDate(dayBeforeMin.getDate() - 1);
+			disabledRanges.push({ from: new Date(1950, 1, 1), to: dayBeforeMin });
+		}
+
+		// maxDate 제한 (최대 날짜 이후 비활성화)
+		if (maxDate) {
+			const dayAfterMax = new Date(maxDate);
+			dayAfterMax.setDate(dayAfterMax.getDate() + 1);
+			disabledRanges.push({ from: dayAfterMax, to: new Date(2100, 11, 31) });
+		}
+
+		return disabledRanges;
+	};
+
 	return (
 		<div className={cn('grid gap-2', className)} {...props}>
 			<Popover modal={true}>
@@ -75,7 +111,7 @@ const DatePicker = ({
 						defaultMonth={date}
 						selected={date}
 						onSelect={handleChangeDate}
-						disabled={[{ from: new Date(1950, 1, 1), to: dateDisabledTime }]}
+						disabled={getDisabledDates()}
 					/>
 				</PopoverContent>
 			</Popover>
