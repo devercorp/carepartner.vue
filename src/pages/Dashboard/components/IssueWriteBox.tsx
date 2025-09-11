@@ -1,272 +1,174 @@
-import { Plus, Trash2, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import z from 'zod';
 
+import { useSaveIssue } from '@/apis/issue';
+import { IssueResponseType, IssueWriteFormType } from '@/apis/issue/type';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader } from '@/components/ui/table';
+import { Table, TableBody, TableHead, TableHeader } from '@/components/ui/table';
 import { TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 
-// 카테고리 데이터 구조
-const categoryData = {
-	기관: {
-		오류: ['공고마감'],
-		기타: ['시스템오류', '접근권한'],
-	},
-	요양사: {
-		오류: ['지원오류', '프로필오류'],
-		기타: ['문의사항', '기타'],
-	},
-};
+import IssueWriteRow from './IssueWriteRow';
 
-// 행 데이터 타입 정의
-interface RowData {
-	id: string;
-	mainCategory: string;
-	subCategory: string;
-	detailCategory: string;
-	riskLevel: string;
-	issueDetail: string;
-	linkText: string;
-	improvement: string;
+interface IssueWriteForm {
+	rows: IssueWriteFormType[];
 }
 
-const IssueWriteBox = () => {
-	const [rows, setRows] = useState<RowData[]>([
-		{
-			id: '1',
-			mainCategory: '',
-			subCategory: '',
-			detailCategory: '',
-			riskLevel: '',
-			issueDetail: '',
-			linkText: '',
-			improvement: '',
+interface IssueWriteBoxProps {
+	division: 'daily' | 'weekly' | 'monthly';
+	data?: IssueResponseType[];
+}
+
+const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
+	const { control, register, handleSubmit, watch, setValue } = useForm<IssueWriteForm>({
+		defaultValues: {
+			rows: [
+				{
+					dailyType: division,
+					category: '',
+					midCategory: '',
+					subCategory: '',
+					orgCnt: 0,
+					issueDetail: '',
+					linkUrl: '',
+					opinion: '',
+				},
+			],
 		},
-	]);
+		resolver: zodResolver(
+			z.object({
+				rows: z.array(
+					z.object({
+						issueReportId: z.number().optional(),
+						dailyType: z.enum(['daily', 'weekly', 'monthly']),
+						category: z.string(),
+						midCategory: z.string(),
+						subCategory: z.string(),
+						orgCnt: z.number(),
+						issueDetail: z.string().optional(),
+						linkUrl: z.string().optional(),
+						opinion: z.string().optional(),
+					})
+				),
+			})
+		),
+	});
+
+	const { mutateAsync: mutateSaveIssue } = useSaveIssue();
+
+	const { fields, append, remove } = useFieldArray({
+		control,
+		name: 'rows',
+	});
 
 	// 새 행 추가
 	const addRow = () => {
-		const newRow: RowData = {
-			id: Date.now().toString(),
-			mainCategory: '',
+		const newRow: IssueWriteFormType = {
+			dailyType: division,
+			category: '',
+			midCategory: '',
 			subCategory: '',
-			detailCategory: '',
-			riskLevel: '',
+			orgCnt: 0,
 			issueDetail: '',
-			linkText: '',
-			improvement: '',
+			linkUrl: '',
+			opinion: '',
 		};
-		setRows([...rows, newRow]);
+		append(newRow);
 	};
 
 	// 행 삭제
-	const removeRow = (id: string) => {
-		if (rows.length > 1) {
-			setRows(rows.filter((row) => row.id !== id));
+	const removeRow = (index: number) => {
+		if (fields.length > 1) {
+			remove(index);
+
+			const findIndex = watch('rows')[index]?.issueReportId;
+
+			if (findIndex) {
+				alert('삭제');
+			}
 		}
 	};
 
-	// 행 데이터 업데이트
-	const updateRow = (id: string, field: keyof RowData, value: string) => {
-		setRows(
-			rows.map((row) => {
-				if (row.id === id) {
-					const updatedRow = { ...row, [field]: value };
-
-					// 대분류가 변경되면 중분류, 소분류 초기화
-					if (field === 'mainCategory') {
-						updatedRow.subCategory = '';
-						updatedRow.detailCategory = '';
-					}
-					// 중분류가 변경되면 소분류 초기화
-					if (field === 'subCategory') {
-						updatedRow.detailCategory = '';
-					}
-
-					return updatedRow;
-				}
-				return row;
-			})
-		);
+	// 카테고리 연계 업데이트 (대분류 변경 시 하위 분류 초기화)
+	const handleCategoryChange = (index: number, value: string) => {
+		setValue(`rows.${index}.category`, value);
+		setValue(`rows.${index}.midCategory`, '');
+		setValue(`rows.${index}.subCategory`, '');
 	};
 
-	// 링크 렌더링 함수
-	const renderLink = (linkText: string) => {
-		if (!linkText) return '-';
+	// 중분류 변경 시 소분류 초기화
+	const handleMidCategoryChange = (index: number, value: string) => {
+		setValue(`rows.${index}.midCategory`, value);
+		setValue(`rows.${index}.subCategory`, '');
+	};
 
-		// URL 패턴 검사 (http://, https://, www. 시작하는 텍스트)
-		const urlPattern = /^(https?:\/\/|www\.)/i;
-		const isUrl = urlPattern.test(linkText);
+	// 폼 제출 핸들러
+	const onSubmit: SubmitHandler<IssueWriteForm> = (data) => {
+		console.log('Form Data:', data);
+		// TODO: API 호출 로직 추가
 
-		if (isUrl) {
-			const fullUrl = linkText.startsWith('www.') ? `https://${linkText}` : linkText;
-			return (
-				<a
-					href={fullUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center gap-4 text-blue-600 underline hover:text-blue-800"
-				>
-					{linkText}
-					<ExternalLink className="h-12 w-12" />
-				</a>
-			);
+		mutateSaveIssue(data.rows);
+	};
+
+	const onError: SubmitErrorHandler<IssueWriteForm> = (error) => {
+		console.log('Error:', error);
+	};
+
+	useEffect(() => {
+		if (data) {
+			setValue('rows', data, { shouldDirty: true });
 		}
-
-		return linkText;
-	};
+	}, [data]);
 
 	return (
 		<div className="space-y-24">
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
 					<CardTitle>응대 Issue 문의 상세</CardTitle>
-					<Button onClick={addRow} variant="outline" size="sm">
-						<Plus className="mr-8 h-16 w-16" />행 추가
-					</Button>
+					<div className="flex items-center gap-8">
+						<Button onClick={addRow} variant="outline" size="sm">
+							<Plus className="mr-8 h-16 w-16" />행 추가
+						</Button>
+						<Button type="submit" variant="default" size="sm" form="issue-write-form">
+							저장
+						</Button>
+					</div>
 				</CardHeader>
 				<CardContent>
-					<Table>
-						<TableHeader>
-							<TableRow className="bg-gray-100">
-								<TableHead className="w-[120px] text-center">대분류</TableHead>
-								<TableHead className="w-[120px] text-center">중분류</TableHead>
-								<TableHead className="w-[120px] text-center">소분류</TableHead>
-								<TableHead className="w-[120px] text-center">기간별 건수 조회</TableHead>
-								<TableHead className="text-center">Issue 상세</TableHead>
-								<TableHead className="w-[120px] text-center">링크 삽입</TableHead>
-								<TableHead className="text-center">의견</TableHead>
-								<TableHead className="w-[60px] text-center">삭제</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{rows.map((row) => (
-								<TableRow key={row.id}>
-									{/* 대분류 */}
-									<TableCell>
-										<Select
-											value={row.mainCategory}
-											onValueChange={(value) => updateRow(row.id, 'mainCategory', value)}
-										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="선택" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="기관">기관</SelectItem>
-												<SelectItem value="요양사">요양사</SelectItem>
-											</SelectContent>
-										</Select>
-									</TableCell>
-
-									{/* 중분류 */}
-									<TableCell>
-										<Select
-											value={row.subCategory}
-											onValueChange={(value) => updateRow(row.id, 'subCategory', value)}
-											disabled={!row.mainCategory}
-										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="선택" />
-											</SelectTrigger>
-											<SelectContent>
-												{row.mainCategory &&
-													categoryData[row.mainCategory as keyof typeof categoryData] &&
-													Object.keys(categoryData[row.mainCategory as keyof typeof categoryData]).map((subCat) => (
-														<SelectItem key={subCat} value={subCat}>
-															{subCat}
-														</SelectItem>
-													))}
-											</SelectContent>
-										</Select>
-									</TableCell>
-
-									{/* 소분류 */}
-									<TableCell>
-										<Select
-											value={row.detailCategory}
-											onValueChange={(value) => updateRow(row.id, 'detailCategory', value)}
-											disabled={!row.mainCategory || !row.subCategory}
-										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="선택" />
-											</SelectTrigger>
-											<SelectContent>
-												{row.mainCategory &&
-													row.subCategory &&
-													categoryData[row.mainCategory as keyof typeof categoryData]?.[
-														row.subCategory as keyof (typeof categoryData)[keyof typeof categoryData]
-													]?.map((detailCat) => (
-														<SelectItem key={detailCat} value={detailCat}>
-															{detailCat}
-														</SelectItem>
-													))}
-											</SelectContent>
-										</Select>
-									</TableCell>
-
-									{/* 기간별 건수 조회 */}
-									<TableCell>
-										<Input
-											type="text"
-											inputMode="numeric"
-											className="text-end"
-											value={row.riskLevel}
-											onChange={(e) => updateRow(row.id, 'riskLevel', e.target.value)}
-											placeholder="건수"
-										/>
-									</TableCell>
-
-									{/* Issue 상세 */}
-									<TableCell>
-										<Textarea
-											value={row.issueDetail}
-											onChange={(e) => updateRow(row.id, 'issueDetail', e.target.value)}
-											placeholder="이슈 상세 내용을 입력하세요"
-											className="min-h-120 resize-none"
-										/>
-									</TableCell>
-
-									{/* 링크 삽입 */}
-									<TableCell>
-										<div className="space-y-8">
-											<Input
-												value={row.linkText}
-												onChange={(e) => updateRow(row.id, 'linkText', e.target.value)}
-												placeholder="URL 또는 텍스트"
-											/>
-											<div className="min-h-[20px] text-sm text-gray-600">{renderLink(row.linkText)}</div>
-										</div>
-									</TableCell>
-
-									{/* 의견 */}
-									<TableCell>
-										<Textarea
-											value={row.improvement}
-											onChange={(e) => updateRow(row.id, 'improvement', e.target.value)}
-											placeholder="개선 방향이나 의견을 입력하세요"
-											className="min-h-120 resize-none"
-										/>
-									</TableCell>
-
-									{/* 삭제 버튼 */}
-									<TableCell className="text-center">
-										<Button
-											onClick={() => removeRow(row.id)}
-											variant="ghost"
-											size="sm"
-											className="text-red-500 hover:text-red-700"
-											disabled={rows.length === 1}
-										>
-											<Trash2 className="h-16 w-16" />
-										</Button>
-									</TableCell>
+					<form id="issue-write-form" onSubmit={handleSubmit(onSubmit, onError)}>
+						<Table>
+							<TableHeader>
+								<TableRow className="bg-gray-100">
+									<TableHead className="w-[120px] text-center">대분류</TableHead>
+									<TableHead className="w-[120px] text-center">중분류</TableHead>
+									<TableHead className="w-[120px] text-center">소분류</TableHead>
+									<TableHead className="w-[120px] text-center">기간별 건수 조회</TableHead>
+									<TableHead className="text-center">Issue 상세</TableHead>
+									<TableHead className="w-[120px] text-center">링크 삽입</TableHead>
+									<TableHead className="text-center">의견</TableHead>
+									<TableHead className="w-[60px] text-center">삭제</TableHead>
 								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+							</TableHeader>
+							<TableBody>
+								{fields.map((field, index) => (
+									<IssueWriteRow
+										key={field.id}
+										index={index}
+										register={register}
+										watch={watch}
+										setValue={setValue}
+										removeRow={removeRow}
+										onCategoryChange={handleCategoryChange}
+										onMidCategoryChange={handleMidCategoryChange}
+										canDelete={fields.length > 1}
+									/>
+								))}
+							</TableBody>
+						</Table>
+					</form>
 				</CardContent>
 			</Card>
 		</div>

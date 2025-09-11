@@ -14,11 +14,12 @@ export function Sidebar() {
 	const navigate = useNavigate();
 
 	const fileRef = useRef<HTMLInputElement>(null);
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const tokenStore = useTokenStore();
 
-	const { mutateAsync: mutateLogout, isPending } = useLogoutApi();
+	const { mutateAsync: mutateLogout } = useLogoutApi();
 
 	const menuItems = [
 		{ id: 'dashboard', label: '대시보드', icon: BarChart3 },
@@ -36,9 +37,12 @@ export function Sidebar() {
 		const formData = new FormData();
 		formData.append('file', file);
 
-		const res = await uploadFile(formData);
+		setIsLoading(true);
 
-		console.log(res);
+		await uploadFile(formData).then((res) => {
+			console.log(res);
+			setIsLoading(false);
+		});
 
 		e.target.value = '';
 	};
@@ -118,8 +122,8 @@ export function Sidebar() {
 				</nav>
 
 				<div className="mt-auto flex flex-col gap-8 px-16">
-					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()} disabled={isPending}>
-						{isPending ? <Loader2 className="size-24 animate-spin" /> : '엑셀 업로드'}
+					<Button variant="default" className="w-full" onClick={() => fileRef.current?.click()} disabled={isLoading}>
+						{isLoading ? <Loader2 className="size-24 animate-spin" /> : '엑셀 업로드'}
 					</Button>
 					<input type="file" ref={fileRef} className="hidden" onChange={handleUploadExcel} />
 

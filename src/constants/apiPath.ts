@@ -5,4 +5,7 @@ export const API_PATH = {
 	EXCEL_UPLOAD: '/api/dashboard/excel/upload',
 	FORM: '/api/survey/insert',
 	FORM_RESPONSE_LIST: '/api/survey/list',
+	ISSUE_LIST: '/api/dashboard/issue-list',
+	ISSUE_WRITE: '/api/dashboard/issue-insert',
+	ISSUE_DELETE: '/api/dashboard/issue-delete',
 };

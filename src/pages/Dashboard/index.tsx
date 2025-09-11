@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
 import { CategoryType, DashboardParams } from '@/apis/dashboard/type';
+import { useGetIssueResponseList } from '@/apis/issue';
 import DatePicker from '@/components/common/DatePicker';
 import MonthPicker from '@/components/common/DatePicker/MonthPicker';
 import WeekPicker from '@/components/common/DatePicker/WeekPicker';
@@ -48,6 +49,11 @@ const DashboardPage = () => {
 		categoryType: activeDivision as DashboardParams['categoryType'],
 		dailyType: activeDateTab as DashboardParams['dailyType'],
 		startDate: selectedDate,
+	});
+
+	const { data: issueData } = useGetIssueResponseList({
+		startDate: selectedDate,
+		dailyType: activeDateTab as 'daily' | 'weekly' | 'monthly',
 	});
 
 	const kpiPeriod = useMemo(
@@ -326,7 +332,10 @@ const DashboardPage = () => {
 						/>
 					)}
 
-					<IssueWriteBox />
+					<IssueWriteBox
+						division={activeDateTab as 'daily' | 'weekly' | 'monthly'}
+						data={issueData?.issuedList ?? []}
+					/>
 
 					{/* Weekly/Monthly Specific Content */}
 					{(activeDateTab === 'weekly' || activeDateTab === 'monthly') && (
