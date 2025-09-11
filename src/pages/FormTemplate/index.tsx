@@ -39,7 +39,9 @@ const FormTemplatePage = () => {
 				phone: z.string().min(1, '전화번호를 입력해주세요.'),
 				overallSat: z.number().min(1, '상담 만족도를 선택해주세요.').max(5, '상담 만족도를 선택해주세요.'),
 				answerAccuracy: z.number().min(1, '대응 만족도를 선택해주세요.').max(5, '대응 만족도를 선택해주세요.'),
-				previousContact: z.string().min(1, '답변을 선택해주세요.'),
+				previousContact: z.enum(['YES', 'NO', 'NOT_SURE', '']).refine((value) => value !== '', {
+					message: '답변을 선택해주세요.',
+				}),
 				freeComment: z.string().optional(),
 			})
 		),
@@ -49,9 +51,11 @@ const FormTemplatePage = () => {
 
 	const onSubmit: SubmitHandler<FormTemplateData> = async (data) => {
 		const res = await mutateSaveFormTemplate(data);
-		console.log(res);
-		reset();
-		navigate('/form-success');
+
+		if (res.data.result === 'success') {
+			reset();
+			navigate('/form-success');
+		}
 	};
 
 	const onError: SubmitErrorHandler<FormTemplateData> = (errors) => {
@@ -173,19 +177,21 @@ const FormTemplatePage = () => {
 								<RadioGroup
 									className="flex flex-col gap-16"
 									value={watch('previousContact')}
-									onValueChange={(value) => setValue('previousContact', value, { shouldValidate: true })}
+									onValueChange={(value) =>
+										setValue('previousContact', value as 'YES' | 'NO' | 'NOT_SURE', { shouldValidate: true })
+									}
 								>
 									<div className="flex items-center space-x-8">
-										<RadioGroupItem value="high" id="high" />
-										<Label htmlFor="high">예, 동일한 문의를 한 적 있습니다.</Label>
+										<RadioGroupItem value="YES" id="YES" />
+										<Label htmlFor="YES">예, 동일한 문의를 한 적 있습니다.</Label>
 									</div>
 									<div className="flex items-center space-x-8">
-										<RadioGroupItem value="medium" id="medium" />
-										<Label htmlFor="medium">아니요, 이번이 처음입니다.</Label>
+										<RadioGroupItem value="NO" id="NO" />
+										<Label htmlFor="NO">아니요, 이번이 처음입니다.</Label>
 									</div>
 									<div className="flex items-center space-x-8">
-										<RadioGroupItem value="low" id="low" />
-										<Label htmlFor="low">잘 모르겠습니다.</Label>
+										<RadioGroupItem value="NOT_SURE" id="NOT_SURE" />
+										<Label htmlFor="NOT_SURE">잘 모르겠습니다.</Label>
 									</div>
 								</RadioGroup>
 								{errors.previousContact && <p className="text-xl text-red-500">{errors.previousContact.message}</p>}
