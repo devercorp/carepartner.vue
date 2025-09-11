@@ -68,9 +68,9 @@ const FormResponsePage = () => {
 	};
 
 	// 페이지네이션 계산
-	const totalPages = formResponseList ? Math.ceil(formResponseList.totalCount / parseInt(pageSize)) : 0;
+	const totalPages = formResponseList ? Math.ceil(formResponseList.count / parseInt(pageSize)) : 0;
 	const startIndex = (currentPage - 1) * parseInt(pageSize) + 1;
-	const endIndex = Math.min(currentPage * parseInt(pageSize), formResponseList?.totalCount || 0);
+	const endIndex = Math.min(currentPage * parseInt(pageSize), formResponseList?.count || 0);
 
 	// 페이지 번호 생성 (현재 페이지 기준으로 5개 페이지까지 표시)
 	const getPageNumbers = () => {
@@ -139,7 +139,7 @@ const FormResponsePage = () => {
 						<CardTitle>응답 목록</CardTitle>
 						<div className="flex items-center gap-16">
 							{/* 총 항목 수 표시 */}
-							<span className="text-muted-foreground text-xl">총 {formResponseList?.totalCount || 0}개의 응답</span>
+							<span className="text-muted-foreground text-xl">총 {formResponseList?.count || 0}개의 응답</span>
 							{/* 페이지 사이즈 선택 */}
 							<Select value={pageSize} onValueChange={handlePageSizeChange}>
 								<SelectTrigger className="w-140">
@@ -179,8 +179,8 @@ const FormResponsePage = () => {
 										</div>
 									</TableCell>
 								</TableRow>
-							) : formResponseList?.items && formResponseList.items.length > 0 ? (
-								formResponseList.items.map((response) => (
+							) : formResponseList?.list && formResponseList.list.length > 0 ? (
+								formResponseList.list.map((response) => (
 									<TableRow key={response.surveyId}>
 										<TableCell className="font-mono text-xl">{response.surveyId}</TableCell>
 										<TableCell className="text-xl">{response.createdAt}</TableCell>
@@ -188,12 +188,10 @@ const FormResponsePage = () => {
 											<div className="font-medium">{response.phone}</div>
 										</TableCell>
 										<TableCell>
-											<Badge className={getSatisfactionColor(response.overallSatText)}>{response.overallSatText}</Badge>
+											<Badge className={getSatisfactionColor(response.overallSat)}>{response.overallSat}</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge className={getSatisfactionColor(response.answerAccuracyText)}>
-												{response.answerAccuracyText}
-											</Badge>
+											<Badge className={getSatisfactionColor(response.answerAccuracy)}>{response.answerAccuracy}</Badge>
 										</TableCell>
 										<TableCell className="max-w-xs truncate" title={response.freeComment}>
 											{response.freeComment || '-'}
@@ -223,7 +221,7 @@ const FormResponsePage = () => {
 					{/* 페이지네이션 */}
 					<div className="mt-16 flex items-center justify-between">
 						<div className="text-muted-foreground text-xl">
-							{startIndex}-{endIndex} / {formResponseList?.totalCount || 0}개 표시
+							{startIndex}-{endIndex} / {formResponseList?.count || 0}개 표시
 						</div>
 
 						<div className="flex items-center gap-8">

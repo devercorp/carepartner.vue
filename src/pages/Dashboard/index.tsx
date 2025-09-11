@@ -94,7 +94,9 @@ const DashboardPage = () => {
 		<div className="space-y-24 p-24 pb-100">
 			<div className="flex items-center justify-between">
 				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
-				<div className="text-muted-foreground text-2xl">마지막 업데이트 날짜: {new Date().toLocaleString()}</div>
+				<div className="text-muted-foreground text-2xl">
+					마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
+				</div>
 			</div>
 
 			<Tabs
@@ -333,8 +335,9 @@ const DashboardPage = () => {
 					)}
 
 					<IssueWriteBox
-						division={activeDateTab as 'daily' | 'weekly' | 'monthly'}
 						data={issueData?.issuedList ?? []}
+						dailyType={activeDateTab as 'daily' | 'weekly' | 'monthly'}
+						startDate={selectedDate}
 					/>
 
 					{/* Weekly/Monthly Specific Content */}

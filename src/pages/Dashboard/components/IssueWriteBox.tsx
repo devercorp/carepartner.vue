@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import z from 'zod';
 
-import { useSaveIssue } from '@/apis/issue';
+import { useDeleteIssue, useSaveIssue } from '@/apis/issue';
 import { IssueResponseType, IssueWriteFormType } from '@/apis/issue/type';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,16 +18,17 @@ interface IssueWriteForm {
 }
 
 interface IssueWriteBoxProps {
-	division: 'daily' | 'weekly' | 'monthly';
+	dailyType: 'daily' | 'weekly' | 'monthly';
 	data?: IssueResponseType[];
+	startDate: string;
 }
 
-const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
+const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 	const { control, register, handleSubmit, watch, setValue } = useForm<IssueWriteForm>({
 		defaultValues: {
 			rows: [
 				{
-					dailyType: division,
+					dailyType: dailyType,
 					category: '',
 					midCategory: '',
 					subCategory: '',
@@ -58,6 +59,7 @@ const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
 	});
 
 	const { mutateAsync: mutateSaveIssue } = useSaveIssue();
+	const { mutateAsync: mutateDeleteIssue } = useDeleteIssue();
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -67,7 +69,7 @@ const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
 	// 새 행 추가
 	const addRow = () => {
 		const newRow: IssueWriteFormType = {
-			dailyType: division,
+			dailyType: dailyType,
 			category: '',
 			midCategory: '',
 			subCategory: '',
@@ -87,7 +89,7 @@ const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
 			const findIndex = watch('rows')[index]?.issueReportId;
 
 			if (findIndex) {
-				alert('삭제');
+				mutateDeleteIssue({ issue_report_id: findIndex });
 			}
 		}
 	};
@@ -118,7 +120,7 @@ const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
 	};
 
 	useEffect(() => {
-		if (data) {
+		if (data?.length && data.length > 0) {
 			setValue('rows', data, { shouldDirty: true });
 		}
 	}, [data]);
@@ -164,6 +166,7 @@ const IssueWriteBox = ({ division, data }: IssueWriteBoxProps) => {
 										onCategoryChange={handleCategoryChange}
 										onMidCategoryChange={handleMidCategoryChange}
 										canDelete={fields.length > 1}
+										startDate={startDate}
 									/>
 								))}
 							</TableBody>

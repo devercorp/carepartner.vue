@@ -14,16 +14,15 @@ export type FormResponseListParams = {
 };
 
 export type FormResponseListResponse = {
-	totalCount: number;
-	page: number;
-	size: number;
-	items: {
+	count: number;
+	list: {
 		surveyId: number;
 		phone: string;
-		overallSatText: string;
-		answerAccuracyText: string;
-		previousContactText: string;
+		overallSat: string;
+		answerAccuracy: string;
+		previousContact: string;
 		freeComment: string;
 		createdAt: string;
 	}[];
+	result: 'success' | 'fail';
 };

@@ -1,6 +1,8 @@
 import { ExternalLink, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 
+import { fetchGetIssueCnt } from '@/apis/issue';
 import { IssueWriteFormType } from '@/apis/issue/type';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +24,7 @@ interface IssueWriteRowProps {
 	onCategoryChange: (index: number, value: string) => void;
 	onMidCategoryChange: (index: number, value: string) => void;
 	canDelete: boolean;
+	startDate: string;
 }
 
 const IssueWriteRow = ({
@@ -33,6 +36,7 @@ const IssueWriteRow = ({
 	onCategoryChange,
 	onMidCategoryChange,
 	canDelete,
+	startDate,
 }: IssueWriteRowProps) => {
 	// 현재 행의 데이터를 watch로 가져오기
 	const currentRow = watch(`rows.${index}`);
@@ -74,6 +78,20 @@ const IssueWriteRow = ({
 		const selectedCategory = TAG_TABLE.find((cat) => cat.name === currentRow?.category);
 		const selectedMidCategory = selectedCategory?.sub.find((mid) => mid.name === currentRow?.midCategory);
 		return selectedMidCategory?.sub || [];
+	};
+
+	const handleSubCategoryChange = async (value: string) => {
+		setValue(`rows.${index}.subCategory`, value);
+
+		const data = await fetchGetIssueCnt({
+			startDate: startDate,
+			dailyType: currentRow?.dailyType || '',
+			category: currentRow?.category || '',
+			midCategory: currentRow?.midCategory || '',
+			subCategory: value,
+		});
+
+		setValue(`rows.${index}.orgCnt`, data.data.data.count);
 	};
 
 	return (
@@ -118,7 +136,7 @@ const IssueWriteRow = ({
 			<TableCell>
 				<Select
 					value={currentRow?.subCategory || ''}
-					onValueChange={(value) => setValue(`rows.${index}.subCategory`, value)}
+					onValueChange={handleSubCategoryChange}
 					disabled={!currentRow?.category || !currentRow?.midCategory}
 				>
 					<SelectTrigger className="w-full">
@@ -139,12 +157,11 @@ const IssueWriteRow = ({
 				<Input
 					{...register(`rows.${index}.orgCnt`, {
 						valueAsNumber: true,
-						min: 0,
 					})}
-					type="number"
 					className="text-end"
 					placeholder="건수"
 					min="0"
+					readOnly
 				/>
 			</TableCell>
 

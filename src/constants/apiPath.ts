@@ -8,4 +8,5 @@ export const API_PATH = {
 	ISSUE_LIST: '/api/dashboard/issue-list',
 	ISSUE_WRITE: '/api/dashboard/issue-insert',
 	ISSUE_DELETE: '/api/dashboard/issue-delete',
+	ISSUE_CNT: '/api/dashboard/issue-cnt',
 };

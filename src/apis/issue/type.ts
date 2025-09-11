@@ -32,3 +32,16 @@ export type IssueResponseType = {
 
 	createdAt: string;
 };
+
+export type IssueCntParams = {
+	dailyType: 'daily' | 'weekly' | 'monthly';
+	startDate: string;
+	category: string;
+	midCategory: string;
+	subCategory: string;
+};
+
+export type IssueCntResponse = {
+	count: number;
+	result: 'success' | 'fail';
+};

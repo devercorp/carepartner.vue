@@ -14,6 +14,7 @@ export type DashboardParams = {
 };
 
 export type DashboardResponseType = {
+	lastUpload: string;
 	dashTop: {
 		/** 총 상담 건수 */
 		totalCount: number;
