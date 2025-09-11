@@ -19,18 +19,21 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 const FormResponsePage = () => {
-	const getPriorityColor = (priority: string) => {
-		switch (priority) {
+	const getSatisfactionColor = (satisfaction: string) => {
+		const baseClasses = 'text-white font-medium';
+		switch (satisfaction) {
 			case '매우만족':
-				return 'bg-green-100 text-green-800';
+				return `${baseClasses} bg-emerald-500`; // 녹색
 			case '만족':
+				return `${baseClasses} bg-lime-500`; // 연두
 			case '보통':
-				return 'bg-yellow-100 text-yellow-800';
+				return `${baseClasses} bg-amber-500`; // 노랑
 			case '불만족':
+				return `${baseClasses} bg-orange-500`; // 주황
 			case '매우불만족':
-				return 'bg-red-100 text-red-800';
+				return `${baseClasses} bg-red-500`; // 빨강
 			default:
-				return 'bg-red-100 text-red-800';
+				return `${baseClasses} bg-gray-500`; // 기본값
 		}
 	};
 
@@ -185,12 +188,10 @@ const FormResponsePage = () => {
 											<div className="font-medium">{response.phone}</div>
 										</TableCell>
 										<TableCell>
-											<Badge variant="outline" className={getPriorityColor(response.overallSatText)}>
-												{response.overallSatText}
-											</Badge>
+											<Badge className={getSatisfactionColor(response.overallSatText)}>{response.overallSatText}</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge variant="outline" className={getPriorityColor(response.answerAccuracyText)}>
+											<Badge className={getSatisfactionColor(response.answerAccuracyText)}>
 												{response.answerAccuracyText}
 											</Badge>
 										</TableCell>

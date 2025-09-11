@@ -1,7 +1,7 @@
 export const CategoryType = {
 	ACADEMY: 'academy',
-	ORG: 'org ',
-	CAREGIVER: 'caregiver ',
+	ORG: 'org',
+	CAREGIVER: 'caregiver',
 	NORMAL: 'normal',
 } as const;
 
@@ -77,5 +77,16 @@ export type DashboardResponseType = {
 		subCategory: string;
 		cnt: number;
 		trendPct?: number;
+	}[];
+
+	catMidSubNested: {
+		category: string;
+		mids: {
+			midCategory: '요양사' | '기관' | '아카데미' | '일반';
+			subs: {
+				cnt: number;
+				subCategory: string;
+			}[];
+		}[];
 	}[];
 };

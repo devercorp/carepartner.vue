@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
-import { DashboardParams } from '@/apis/dashboard/type';
+import { CategoryType, DashboardParams } from '@/apis/dashboard/type';
 import DatePicker from '@/components/common/DatePicker';
 import MonthPicker from '@/components/common/DatePicker/MonthPicker';
 import WeekPicker from '@/components/common/DatePicker/WeekPicker';
@@ -15,16 +15,16 @@ import { DataTable } from '../../components/dashboard/DataTable';
 import { KPICard } from '../../components/dashboard/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { topInquiryTags } from '../../data/mockData';
 import IssueWriteBox from './components/IssueWriteBox';
+import TagChartBox from './components/TagChartBox';
 import { calculateRatio, calculateTrend, valueUnitFormat } from './utils/dataFormat';
 
 const DIVISION_TABS = [
 	{ label: '전체', value: '' },
-	{ label: '요양사', value: 'caregiver' },
-	{ label: '기관', value: 'institution' },
-	{ label: '아카데미', value: 'academy' },
-	{ label: '일반', value: 'general' },
+	{ label: '요양사', value: CategoryType.CAREGIVER },
+	{ label: '기관', value: CategoryType.ORG },
+	{ label: '아카데미', value: CategoryType.ACADEMY },
+	{ label: '일반', value: CategoryType.NORMAL },
 ] as const;
 
 const trendLines = [
@@ -61,6 +61,7 @@ const DashboardPage = () => {
 		() => (activeDateTab === 'daily' ? '전일대비' : activeDateTab === 'weekly' ? '전주대비' : '전월대비'),
 		[activeDateTab]
 	);
+
 	const surveyPeriod = useCallback(
 		(dayIndex: number) => {
 			if (activeDateTab === 'daily') {
@@ -80,23 +81,14 @@ const DashboardPage = () => {
 	};
 
 	const formatTotalTags = () => {
-		const channelData = dashboardData?.consultation.reduce(
-			(acc, curr) => {
-				acc[0] = { ...acc[0], value: acc[0].value + (curr.howToUse ?? 0) };
-				acc[1] = { ...acc[1], value: acc[1].value + (curr.error ?? 0) };
-				acc[2] = { ...acc[2], value: acc[2].value + (curr.inconvenience ?? 0) };
-				acc[3] = { ...acc[3], value: acc[3].value + (curr.etc ?? 0) };
-				return acc;
-			},
-			[
-				{ name: '사용법', value: 0, color: '#3B82F6' },
-				{ name: '오류문의', value: 0, color: '#10B981' },
-				{ name: '불편신고', value: 0, color: '#F59E0B' },
-				{ name: '기타', value: 0, color: '#0f172a' },
-			]
-		);
+		const channelData = dashboardData?.consultation.find((item) => item.dayIndex === 0);
 
-		return channelData ?? [];
+		return [
+			{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
+			{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
+			{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
+			{ name: '기타', value: channelData?.etc ?? 0, color: '#0f172a' },
+		];
 	};
 
 	return (
@@ -138,7 +130,7 @@ const DashboardPage = () => {
 				value={activeDateTab}
 				onValueChange={(value) => {
 					setActiveDateTab(value as DashboardParams['dailyType']);
-					setSearchParams({ dailyType: value, startDate: selectedDate });
+					setSearchParams({ dailyType: value, startDate: selectedDate, categoryType: activeDivision });
 				}}
 			>
 				<div className="flex items-center gap-16">
@@ -287,12 +279,12 @@ const DashboardPage = () => {
 								</CardHeader>
 								<CardContent>
 									<LineChart
-										data={
-											dashboardData?.surveyOverallAvg.reverse().map((item) => ({
+										data={[
+											...(dashboardData?.surveyOverallAvg.map((item) => ({
 												...item,
 												period: surveyPeriod(item.dayIndex),
-											})) ?? []
-										}
+											})) ?? []),
+										].reverse()}
 										lines={[{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' }]}
 										height={200}
 										range={[0, 5]}
@@ -308,12 +300,12 @@ const DashboardPage = () => {
 									</CardHeader>
 									<CardContent>
 										<LineChart
-											data={
-												dashboardData?.consultation.reverse().map((item) => ({
+											data={[
+												...(dashboardData?.consultation.map((item) => ({
 													...item,
-													period: item.dayIndex === 0 ? '오늘' : item.dayIndex === 1 ? '어제' : `${item.dayIndex}일전`,
-												})) ?? []
-											}
+													period: surveyPeriod(item.dayIndex),
+												})) ?? []),
+											].reverse()}
 											lines={trendLines}
 											height={300}
 										/>
@@ -330,6 +322,13 @@ const DashboardPage = () => {
 								</Card>
 							</div>
 						</>
+					)}
+
+					{activeDivision !== '' && (
+						<TagChartBox
+							categoryType={activeDivision as CategoryType}
+							data={dashboardData?.catMidSubNested[0]?.mids ?? []}
+						/>
 					)}
 
 					<IssueWriteBox />
