@@ -42,13 +42,19 @@ const TagChartBox = ({ categoryType, data }: TagChartBoxProps) => {
 						<CardTitle>{item.midCategory} 문의</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<BarChart
-							data={item?.subs ?? []}
-							dataKey="cnt"
-							nameKey="subCategory"
-							height={300}
-							colors={DEFAULT_CHART_COLORS}
-						/>
+						{item?.subs?.length > 0 ? (
+							<BarChart
+								data={item?.subs ?? []}
+								dataKey="cnt"
+								nameKey="subCategory"
+								height={300}
+								colors={DEFAULT_CHART_COLORS}
+							/>
+						) : (
+							<div className="flex h-full items-center justify-center">
+								<p className="text-muted-foreground">데이터가 없습니다.</p>
+							</div>
+						)}
 					</CardContent>
 				</Card>
 			))}

@@ -34,13 +34,6 @@ const trendLines = [
 	{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
 ];
 
-const topTagsColumns = [
-	{ key: 'no', label: '번호', type: 'number' },
-	{ key: 'subCategory', label: '태그명', type: 'text' },
-	{ key: 'cnt', label: '건수', type: 'number' },
-	{ key: 'trendPct', label: '추이', type: 'trend' },
-];
-
 const DashboardPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -293,34 +286,36 @@ const DashboardPage = () => {
 							</Card>
 
 							{/* Charts Section */}
-							<div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
-								<Card>
-									<CardHeader>
-										<CardTitle>상담 유형별 건수 추이</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<LineChart
-											data={[
-												...(dashboardData?.consultation.map((item) => ({
-													...item,
-													period: surveyPeriod(item.dayIndex),
-												})) ?? []),
-											].reverse()}
-											lines={trendLines}
-											height={300}
-										/>
-									</CardContent>
-								</Card>
+							{activeDivision !== CategoryType.NORMAL && (
+								<div className="grid grid-cols-1 gap-24 lg:grid-cols-2">
+									<Card>
+										<CardHeader>
+											<CardTitle>상담 유형별 건수 추이</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<LineChart
+												data={[
+													...(dashboardData?.consultation.map((item) => ({
+														...item,
+														period: surveyPeriod(item.dayIndex),
+													})) ?? []),
+												].reverse()}
+												lines={trendLines}
+												height={300}
+											/>
+										</CardContent>
+									</Card>
 
-								<Card>
-									<CardHeader>
-										<CardTitle>전체 상담 유형 분포</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<PieChart data={formatTotalTags()} dataKey="value" height={300} />
-									</CardContent>
-								</Card>
-							</div>
+									<Card>
+										<CardHeader>
+											<CardTitle>전체 상담 유형 분포</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<PieChart data={formatTotalTags()} dataKey="value" height={300} />
+										</CardContent>
+									</Card>
+								</div>
+							)}
 						</>
 					)}
 
@@ -339,19 +334,25 @@ const DashboardPage = () => {
 							<DataTable
 								title={`인입이 높은 태그 top 5 (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
 								data={dashboardData?.topTags.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
-								columns={topTagsColumns}
+								columns={[
+									{ key: 'no', label: '번호', type: 'number' },
+									{ key: 'subCategory', label: '태그명', type: 'text' },
+									{ key: 'cnt', label: '건수', type: 'number' },
+									{ key: 'trendPct', label: '추이', type: 'trend' },
+								]}
 							/>
 
-							{/* {activeDateTab === 'monthly' && (
-								<Card>
-									<CardHeader>
-										<CardTitle>지속적으로 증가하는 태그 top 5</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<PieChart data={tagDistribution} dataKey="value" height={300} />
-									</CardContent>
-								</Card>
-							)} */}
+							{activeDateTab === 'monthly' && (
+								<DataTable
+									title={'지속적으로 증가하는 태그 top 5'}
+									data={dashboardData?.incMonthTop.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
+									columns={[
+										{ key: 'no', label: '번호', type: 'number' },
+										{ key: 'subCategory', label: '태그명', type: 'text' },
+										{ key: 'cnt', label: '건수', type: 'number' },
+									]}
+								/>
+							)}
 						</div>
 					)}
 				</TabsContent>
