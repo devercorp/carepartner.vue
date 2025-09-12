@@ -98,9 +98,9 @@ const DashboardPage = () => {
 		if (!dashboardData?.watingTime?.length || dashboardData.watingTime.length < 2) {
 			const [hours, minutes] = currentTime.split(':');
 			return {
-				result: `${hours}시간 ${minutes}분`,
+				result: '0시간 0분',
 				direction: 'neutral' as 'up' | 'down' | 'neutral' | 'up_reverse' | 'down_reverse',
-				value: '0시간 0분',
+				value: `${hours}시간 ${minutes}분`,
 			};
 		}
 
@@ -155,7 +155,7 @@ const DashboardPage = () => {
 				value={activeDateTab}
 				onValueChange={(value) => {
 					setActiveDateTab(value as DashboardParams['dailyType']);
-					setSearchParams({ dailyType: value, startDate: selectedDate, categoryType: activeDivision });
+					setSearchParams({ dailyType: value, startDate: '', categoryType: activeDivision });
 				}}
 			>
 				<div className="flex items-center gap-16">
