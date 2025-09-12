@@ -34,6 +34,7 @@ export const useGetIssueResponseList = (params: IssueResponseListParams) => {
 		queryKey: [API_PATH.ISSUE_LIST, params],
 		queryFn: () => api.get(API_PATH.ISSUE_LIST, params),
 		select: (data) => data.data.data,
+		enabled: !!params.startDate,
 	});
 };
 

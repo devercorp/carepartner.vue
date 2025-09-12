@@ -12,5 +12,6 @@ export const useGetDashboard = (params: DashboardParams) => {
 		queryKey: [API_PATH.DASHBOARD, params],
 		queryFn: () => api.get(API_PATH.DASHBOARD, params),
 		select: (data) => data.data.data,
+		enabled: !!params.startDate,
 	});
 };
