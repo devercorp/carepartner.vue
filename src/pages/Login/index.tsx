@@ -101,7 +101,7 @@ const LoginPage = () => {
 						</Button>
 					</form>
 
-					<div className="mt-24 rounded-lg bg-blue-50 p-16">
+					{/* <div className="mt-24 rounded-lg bg-blue-50 p-16">
 						<p className="text-xl leading-24 text-blue-700">
 							<strong>테스트 계정:</strong>
 							<br />
@@ -109,7 +109,7 @@ const LoginPage = () => {
 							<br />
 							비밀번호: 1234
 						</p>
-					</div>
+					</div> */}
 				</CardContent>
 			</Card>
 		</div>

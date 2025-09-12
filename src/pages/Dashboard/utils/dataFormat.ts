@@ -6,8 +6,8 @@ export const valueUnitFormat = (value: string | number, unit: string) => {
  * 변화율 결과 타입
  */
 export interface TrendResult {
-	/** 변화 방향 ('up' | 'down' | 'neutral') */
-	direction: 'up' | 'down' | 'neutral';
+	/** 변화 방향 ('up' | 'down' | 'neutral' | 'up_reverse' | 'down_reverse') */
+	direction: 'up' | 'down' | 'neutral' | 'up_reverse' | 'down_reverse';
 	/** 포맷된 변화율 문자열 (예: "+12.5%", "-5.3%", "0.0%") */
 	value: string;
 }

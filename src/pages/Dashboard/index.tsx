@@ -270,7 +270,7 @@ const DashboardPage = () => {
 						/>
 						<KPICard
 							title="콜백 완료율"
-							value={valueUnitFormat(dashboardData?.dashTop.callBackSuc || 0, '건')}
+							value={valueUnitFormat(dashboardData?.dashTop?.callBackSuc || 0, '건')}
 							trend={{
 								...calculateTrend(dashboardData?.dashTop.callBackSuc || 0, dashboardData?.dashTop.lastCallBackSuc || 0),
 								period: kpiPeriod,
@@ -280,19 +280,18 @@ const DashboardPage = () => {
 						/>
 						<KPICard
 							title="당일 처리율"
-							value={(dashboardData?.dailyRate[0]?.curr_ratio_pct || 0) + '%'}
+							value={((dashboardData?.dailyRate ?? [])[0]?.curr_ratio_pct || 0) + '%'}
 							trend={{
 								direction: calculateTrend(
-									dashboardData?.dailyRate[0]?.curr_ratio_pct || 0,
-									dashboardData?.dailyRate[0]?.prev_ratio_pct || 0
+									(dashboardData?.dailyRate ?? [])[0]?.curr_ratio_pct || 0,
+									(dashboardData?.dailyRate ?? [])[0]?.prev_ratio_pct || 0
 								).direction,
-								value: (dashboardData?.dailyRate[0]?.diff_pct || 0) + '%',
+								value: ((dashboardData?.dailyRate ?? [])[0]?.diff_pct || 0) + '%',
 								period: kpiPeriod,
 							}}
 							icon={<Star className="h-20 w-20" />}
 							color="green"
 						/>
-
 						<KPICard
 							title="첫 응대시간"
 							value={formatWatingTime.result}
