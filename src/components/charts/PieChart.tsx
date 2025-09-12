@@ -25,7 +25,7 @@ export function PieChart({
 	// 각 항목의 표시/숨김 상태를 관리
 	const [visibleItems, setVisibleItems] = useState<Record<string, boolean>>(
 		data.reduce(
-			(acc, item, index) => {
+			(acc, _, index) => {
 				acc[index] = true;
 				return acc;
 			},

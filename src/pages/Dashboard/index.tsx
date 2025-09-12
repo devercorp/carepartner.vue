@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import IssueWriteBox from './components/IssueWriteBox';
 import TagChartBox from './components/TagChartBox';
-import { calculateRatio, calculateTrend, valueUnitFormat } from './utils/dataFormat';
+import { calculateRatio, calculateTrend, calculateTimeDifference, valueUnitFormat } from './utils/dataFormat';
 
 const DIVISION_TABS = [
 	{ label: '전체', value: '' },
@@ -89,6 +89,30 @@ const DashboardPage = () => {
 			{ name: '기타', value: channelData?.etc ?? 0, color: '#0f172a' },
 		];
 	};
+
+	const formatWatingTime = useMemo(() => {
+		const currentTime = dashboardData?.watingTime[0]?.watingTime || '00:00:00';
+		const previousTime = dashboardData?.watingTime[1]?.watingTime || '00:00:00';
+
+		// 데이터가 하나만 있거나 없는 경우
+		if (!dashboardData?.watingTime?.length || dashboardData.watingTime.length < 2) {
+			const [hours, minutes] = currentTime.split(':');
+			return {
+				result: `${hours}시간 ${minutes}분`,
+				direction: 'neutral' as 'up' | 'down' | 'neutral' | 'up_reverse' | 'down_reverse',
+				value: '0시간 0분',
+			};
+		}
+
+		// 시간 차이 계산
+		const timeDiff = calculateTimeDifference(currentTime, previousTime);
+
+		return {
+			result: timeDiff.current,
+			direction: timeDiff.direction,
+			value: timeDiff.value,
+		};
+	}, [dashboardData?.watingTime]);
 
 	return (
 		<div className="space-y-24 p-24 pb-100">
@@ -234,7 +258,11 @@ const DashboardPage = () => {
 							title="콜백 인입 건"
 							value={valueUnitFormat(dashboardData?.dashTop.callBack || 0, '건')}
 							trend={{
-								...calculateTrend(dashboardData?.dashTop.callBack || 0, dashboardData?.dashTop.lastCallBack || 0),
+								direction: calculateTrend(
+									dashboardData?.dashTop.callBack || 0,
+									dashboardData?.dashTop.lastCallBack || 0
+								).direction,
+								value: (dashboardData?.dashTop.callBack || 0) - (dashboardData?.dashTop.lastCallBack || 0) + '건',
 								period: kpiPeriod,
 							}}
 							icon={<Phone className="h-20 w-20" />}
@@ -252,9 +280,13 @@ const DashboardPage = () => {
 						/>
 						<KPICard
 							title="당일 처리율"
-							value={valueUnitFormat(0 || 0, '%')}
+							value={(dashboardData?.dailyRate[0]?.curr_ratio_pct || 0) + '%'}
 							trend={{
-								...calculateTrend(0, 0),
+								direction: calculateTrend(
+									dashboardData?.dailyRate[0]?.curr_ratio_pct || 0,
+									dashboardData?.dailyRate[0]?.prev_ratio_pct || 0
+								).direction,
+								value: (dashboardData?.dailyRate[0]?.diff_pct || 0) + '%',
 								period: kpiPeriod,
 							}}
 							icon={<Star className="h-20 w-20" />}
@@ -263,9 +295,10 @@ const DashboardPage = () => {
 
 						<KPICard
 							title="첫 응대시간"
-							value={valueUnitFormat(0 || 0, '분')}
+							value={formatWatingTime.result}
 							trend={{
-								...calculateTrend(0, 0),
+								direction: formatWatingTime.direction,
+								value: formatWatingTime.value,
 								period: kpiPeriod,
 							}}
 							icon={<Clock className="h-20 w-20" />}

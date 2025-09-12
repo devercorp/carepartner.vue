@@ -9,7 +9,7 @@ interface KPICardProps {
 	value: string | number;
 	subtitle?: string;
 	trend?: {
-		direction: 'up' | 'down' | 'neutral';
+		direction: 'up' | 'down' | 'neutral' | 'up_reverse' | 'down_reverse';
 		value: string;
 		period?: string;
 	};
@@ -36,6 +36,10 @@ export function KPICard({ title, value, subtitle, trend, icon, color = 'blue', c
 				return <TrendingUp className="h-20 w-20 text-green-500" />;
 			case 'down':
 				return <TrendingDown className="h-20 w-20 text-red-500" />;
+			case 'up_reverse':
+				return <TrendingUp className="h-20 w-20 text-red-500" />;
+			case 'down_reverse':
+				return <TrendingDown className="h-20 w-20 text-green-500" />;
 			case 'neutral':
 				return <Minus className="h-20 w-20 text-gray-500" />;
 		}
@@ -49,6 +53,10 @@ export function KPICard({ title, value, subtitle, trend, icon, color = 'blue', c
 				return 'text-green-500';
 			case 'down':
 				return 'text-red-500';
+			case 'up_reverse':
+				return 'text-red-500';
+			case 'down_reverse':
+				return 'text-green-500';
 			case 'neutral':
 				return 'text-gray-500';
 		}

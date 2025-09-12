@@ -90,4 +90,12 @@ export type DashboardResponseType = {
 			}[];
 		}[];
 	}[];
+
+	dailyRate: {
+		curr_ratio_pct: number;
+		diff_pct: number;
+		prev_ratio_pct: number;
+	}[];
+
+	watingTime: { watingTime: string; watingTimeSeconds: number; ymd: string }[];
 };
