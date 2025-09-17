@@ -84,13 +84,27 @@ const DashboardPage = () => {
 	);
 
 	const handleDateChange = (date: string) => {
+		const params = Object.fromEntries(searchParams.entries());
 		setSelectedDate(date);
-		setSearchParams({ startDate: date, dailyType: activeDateTab, categoryType: activeDivision });
+		setSearchParams({ ...params, startDate: date });
 	};
 
 	const handleTopNChange = () => {
 		const params = Object.fromEntries(searchParams.entries());
 		setSearchParams({ ...params, topN: (topN > 0 ? topN : 5).toString() });
+	};
+
+	const handleDivisionChange = (value: string) => {
+		setActiveDivision(value);
+		setActiveDateTab('daily');
+		const params = Object.fromEntries(searchParams.entries());
+		setSearchParams({ ...params, dailyType: 'daily', categoryType: value });
+	};
+
+	const handleDateTabChange = (value: string) => {
+		setActiveDateTab(value);
+		const params = Object.fromEntries(searchParams.entries());
+		setSearchParams({ ...params, startDate: '', dailyType: value });
 	};
 
 	const formatTotalTags = () => {
@@ -144,14 +158,7 @@ const DashboardPage = () => {
 				</div>
 			</div>
 
-			<Tabs
-				value={activeDivision}
-				onValueChange={(value) => {
-					setActiveDivision(value as (typeof DIVISION_TABS)[number]['value']);
-					setActiveDateTab('daily');
-					setSearchParams({ categoryType: value });
-				}}
-			>
+			<Tabs value={activeDivision} onValueChange={handleDivisionChange}>
 				<TabsList className="w-full bg-transparent p-0">
 					{DIVISION_TABS.map((division) => (
 						<TabsTrigger
@@ -171,14 +178,7 @@ const DashboardPage = () => {
 				</TabsList>
 			</Tabs>
 
-			<Tabs
-				className="gap-24"
-				value={activeDateTab}
-				onValueChange={(value) => {
-					setActiveDateTab(value as DashboardParams['dailyType']);
-					setSearchParams({ dailyType: value, startDate: '', categoryType: activeDivision });
-				}}
-			>
+			<Tabs className="gap-24" value={activeDateTab} onValueChange={handleDateTabChange}>
 				<div className="flex items-center gap-16">
 					<TabsList>
 						<TabsTrigger value="daily">일간</TabsTrigger>
