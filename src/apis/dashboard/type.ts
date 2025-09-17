@@ -11,6 +11,8 @@ export type DashboardParams = {
 	categoryType: CategoryType | string;
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	startDate: string;
+	excludeTags?: string;
+	topN?: number;
 };
 
 export type DashboardResponseType = {
@@ -98,4 +100,10 @@ export type DashboardResponseType = {
 	}[];
 
 	watingTime: { watingTime: string; watingTimeSeconds: number; ymd: string }[];
+};
+
+export type TagsResponseType = {
+	tags: {
+		tags: string;
+	}[];
 };

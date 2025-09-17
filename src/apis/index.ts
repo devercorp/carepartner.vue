@@ -3,11 +3,8 @@ import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'ax
 // mem - 토큰 재발급 위함
 
 import { tokenStore } from '@/stores/useTokenStore';
-import { AxiosResponseType } from '@/types';
 
 const baseURL = import.meta.env.VITE_BASE_URL;
-
-console.log(baseURL);
 
 const axiosInstance = axios.create({
 	baseURL: baseURL,

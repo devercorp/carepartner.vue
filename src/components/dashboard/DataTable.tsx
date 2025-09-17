@@ -11,9 +11,10 @@ interface DataTableProps {
 		label: string;
 		type?: 'text' | 'number' | 'trend' | 'percentage' | string;
 	}[];
+	actionsRender?: React.ReactNode;
 }
 
-export function DataTable({ title, data, columns }: DataTableProps) {
+export function DataTable({ title, data, columns, actionsRender }: DataTableProps) {
 	const renderCell = (item: any, column: any) => {
 		const value = item[column.key];
 
@@ -51,8 +52,9 @@ export function DataTable({ title, data, columns }: DataTableProps) {
 
 	return (
 		<Card>
-			<CardHeader>
+			<CardHeader className="flex items-center justify-between">
 				<CardTitle>{title}</CardTitle>
+				{actionsRender && <div className="flex items-center gap-16">{actionsRender}</div>}
 			</CardHeader>
 			<CardContent>
 				<Table>

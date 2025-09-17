@@ -8,6 +8,9 @@ import { useGetIssueResponseList } from '@/apis/issue';
 import DatePicker from '@/components/common/DatePicker';
 import MonthPicker from '@/components/common/DatePicker/MonthPicker';
 import WeekPicker from '@/components/common/DatePicker/WeekPicker';
+import Modal from '@/components/common/Modal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -18,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import IssueWriteBox from './components/IssueWriteBox';
 import TagChartBox from './components/TagChartBox';
+import TagsFilterModal from './components/modal/TagsFilterModal';
 import { calculateRatio, calculateTrend, calculateTimeDifference, valueUnitFormat } from './utils/dataFormat';
 
 const DIVISION_TABS = [
@@ -38,8 +42,11 @@ const trendLines = [
 const DashboardPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 
+	const topCount = searchParams.get('topN') ? Number(searchParams.get('topN')) : 5;
+
 	const [activeDivision, setActiveDivision] = useState<string>(String(searchParams.get('categoryType') ?? ''));
 	const [activeDateTab, setActiveDateTab] = useState<string>(searchParams.get('dailyType') ?? 'daily');
+	const [topN, setTopN] = useState<number>(topCount);
 
 	const [selectedDate, setSelectedDate] = useState<string>(
 		searchParams.get('startDate') ?? new Date().toISOString().split('T')[0]
@@ -49,6 +56,8 @@ const DashboardPage = () => {
 		categoryType: activeDivision as DashboardParams['categoryType'],
 		dailyType: activeDateTab as DashboardParams['dailyType'],
 		startDate: selectedDate,
+		excludeTags: searchParams.get('excludeTags') ?? '',
+		topN: topCount,
 	});
 
 	const { data: issueData } = useGetIssueResponseList({
@@ -77,6 +86,11 @@ const DashboardPage = () => {
 	const handleDateChange = (date: string) => {
 		setSelectedDate(date);
 		setSearchParams({ startDate: date, dailyType: activeDateTab, categoryType: activeDivision });
+	};
+
+	const handleTopNChange = () => {
+		const params = Object.fromEntries(searchParams.entries());
+		setSearchParams({ ...params, topN: (topN > 0 ? topN : 5).toString() });
 	};
 
 	const formatTotalTags = () => {
@@ -118,8 +132,15 @@ const DashboardPage = () => {
 		<div className="space-y-24 p-24 pb-100">
 			<div className="flex items-center justify-between">
 				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
-				<div className="text-muted-foreground text-2xl">
-					마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
+				<div className="flex items-center gap-16">
+					<div className="text-muted-foreground text-2xl">
+						마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
+					</div>
+					<div className="flex items-center gap-16">
+						<Modal renderModalTrigger={<Button variant="outline">반영된 태그 확인</Button>}>
+							{(closeModal) => <TagsFilterModal closeModal={closeModal} />}
+						</Modal>
+					</div>
 				</div>
 			</div>
 
@@ -376,7 +397,21 @@ const DashboardPage = () => {
 					{(activeDateTab === 'weekly' || activeDateTab === 'monthly') && (
 						<div className="space-y-24">
 							<DataTable
-								title={`인입이 높은 태그 top 5 (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
+								title={`인입이 높은 태그 top ${topCount} (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
+								actionsRender={
+									<div className="flex items-center gap-8">
+										<Input
+											className="w-100"
+											type="number"
+											min={1}
+											value={topN}
+											onChange={(e) => setTopN(Number(e.target.value))}
+										/>
+										<Button variant="outline" onClick={handleTopNChange}>
+											적용
+										</Button>
+									</div>
+								}
 								data={dashboardData?.topTags.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
 								columns={[
 									{ key: 'no', label: '번호', type: 'number' },

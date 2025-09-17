@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
-import AdminPage from '@/pages/Admin';
 import DashboardPage from '@/pages/Dashboard';
 import FormResponsePage from '@/pages/FormResponse';
 import FormSuccessPage from '@/pages/FormSuccess';
@@ -26,10 +25,6 @@ const router = createBrowserRouter([
 			{
 				path: '/dashboard',
 				element: <DashboardPage />,
-			},
-			{
-				path: '/admin',
-				element: <AdminPage />,
 			},
 			{
 				path: '/forms',
