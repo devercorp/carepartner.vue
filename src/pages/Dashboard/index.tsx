@@ -1,5 +1,5 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
@@ -56,7 +56,7 @@ const DashboardPage = () => {
 		categoryType: activeDivision as DashboardParams['categoryType'],
 		dailyType: activeDateTab as DashboardParams['dailyType'],
 		startDate: selectedDate,
-		excludeTags: searchParams.get('excludeTags') ?? '',
+		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')).replace('|', ',') : '',
 		topN: topCount,
 	});
 
@@ -141,6 +141,10 @@ const DashboardPage = () => {
 			value: timeDiff.value,
 		};
 	}, [dashboardData?.watingTime]);
+
+	useEffect(() => {
+		console.log(searchParams.get('excludeTags'));
+	}, [searchParams]);
 
 	return (
 		<div className="space-y-24 p-24 pb-100">
