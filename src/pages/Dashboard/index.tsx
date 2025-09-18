@@ -56,7 +56,7 @@ const DashboardPage = () => {
 		categoryType: activeDivision as DashboardParams['categoryType'],
 		dailyType: activeDateTab as DashboardParams['dailyType'],
 		startDate: selectedDate,
-		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')).replace('|', ',') : '',
+		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')).replaceAll('|', ',') : '',
 		topN: topCount,
 	});
 
