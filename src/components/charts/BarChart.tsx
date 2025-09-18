@@ -98,7 +98,7 @@ export function BarChart({
 							textAnchor="middle"
 							height={60}
 						/>
-						<YAxis tick={{ fontSize: 12 }} stroke="#666" />
+						<YAxis tick={{ fontSize: 12 }} stroke="#666" allowDecimals={false} />
 						<Tooltip
 							formatter={(value: any, name: any) => [`${value}건`, name]}
 							labelFormatter={(label) => `${label}`}
