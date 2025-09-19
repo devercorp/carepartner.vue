@@ -11,6 +11,7 @@ import WeekPicker from '@/components/common/DatePicker/WeekPicker';
 import Modal from '@/components/common/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -142,16 +143,12 @@ const DashboardPage = () => {
 		};
 	}, [dashboardData?.watingTime]);
 
-	useEffect(() => {
-		console.log(searchParams.get('excludeTags'));
-	}, [searchParams]);
-
 	return (
 		<div className="space-y-24 p-24 pb-100">
-			<div className="flex justify-between md:items-start lg:items-center">
-				<h1 className="text-4xl font-semibold whitespace-nowrap">보살핌 통합 대시보드</h1>
+			<div className="flex justify-between">
+				<h1 className="pl-32 text-4xl font-semibold whitespace-nowrap md:pl-0">통합 대시보드</h1>
 				<div className="flex flex-col-reverse items-end gap-8 lg:flex-row lg:items-center">
-					<div className="text-muted-foreground text-2xl whitespace-nowrap">
+					<div className="text-muted-foreground xs:text-2xl text-end text-xl">
 						마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
 					</div>
 					<div className="flex items-center gap-16">
@@ -162,13 +159,13 @@ const DashboardPage = () => {
 				</div>
 			</div>
 
-			<Tabs value={activeDivision} onValueChange={handleDivisionChange}>
-				<TabsList className="w-full bg-transparent p-0">
+			<Tabs value={activeDivision} onValueChange={handleDivisionChange} className="hidden sm:flex">
+				<TabsList className="w-auto overflow-x-auto bg-transparent md:p-0">
 					{DIVISION_TABS.map((division) => (
 						<TabsTrigger
 							key={division.value}
 							className={cn(
-								'border-0 font-semibold data-[state=active]:text-green-600',
+								'min-w-80 border-0 font-semibold data-[state=active]:text-green-600',
 								'border-b-2 border-gray-200 data-[state=active]:border-0 data-[state=active]:border-b-2',
 								'data-[state=active]:border-green-600',
 								'rounded-none data-[state=active]:bg-transparent',
@@ -182,17 +179,48 @@ const DashboardPage = () => {
 				</TabsList>
 			</Tabs>
 
+			<Select
+				value={activeDivision === '' ? 'all' : activeDivision}
+				onValueChange={(value) => setActiveDivision(value)}
+			>
+				<SelectTrigger className="w-full bg-white sm:hidden">
+					<SelectValue placeholder="선택" />
+				</SelectTrigger>
+				<SelectContent>
+					{DIVISION_TABS.map((division) => {
+						const value = division.value === '' ? 'all' : division.value;
+						return (
+							<SelectItem key={value} value={value}>
+								{division.label}
+							</SelectItem>
+						);
+					})}
+				</SelectContent>
+			</Select>
+
 			<Tabs className="gap-24" value={activeDateTab} onValueChange={handleDateTabChange}>
-				<div className="flex items-center gap-16">
-					<TabsList>
-						<TabsTrigger value="daily">일간</TabsTrigger>
-						<TabsTrigger value="weekly">주간</TabsTrigger>
-						<TabsTrigger value="monthly">월간</TabsTrigger>
+				<div className="flex flex-col items-center gap-16 sm:flex-row">
+					<TabsList className="w-full sm:w-auto">
+						<TabsTrigger value="daily" className="min-w-80">
+							일간
+						</TabsTrigger>
+						<TabsTrigger value="weekly" className="min-w-80">
+							주간
+						</TabsTrigger>
+						<TabsTrigger value="monthly" className="min-w-80">
+							월간
+						</TabsTrigger>
 					</TabsList>
 
-					{activeDateTab === 'daily' && <DatePicker onChange={handleDateChange} value={selectedDate} />}
-					{activeDateTab === 'weekly' && <WeekPicker onChange={handleDateChange} value={selectedDate} />}
-					{activeDateTab === 'monthly' && <MonthPicker onChange={handleDateChange} value={selectedDate} />}
+					{activeDateTab === 'daily' && (
+						<DatePicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
+					{activeDateTab === 'weekly' && (
+						<WeekPicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
+					{activeDateTab === 'monthly' && (
+						<MonthPicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
 				</div>
 
 				<TabsContent value={activeDateTab} className="space-y-24">

@@ -1,5 +1,4 @@
 import { ExternalLink, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 
 import { fetchGetIssueCnt } from '@/apis/issue';
@@ -170,7 +169,7 @@ const IssueWriteRow = ({
 				<Textarea
 					{...register(`rows.${index}.issueDetail`)}
 					placeholder="이슈 상세 내용을 입력하세요"
-					className="min-h-120 resize-none"
+					className="min-h-120 min-w-200 resize-none"
 				/>
 			</TableCell>
 
@@ -178,7 +177,7 @@ const IssueWriteRow = ({
 			<TableCell>
 				<div className="space-y-8">
 					<Input {...register(`rows.${index}.linkUrl`)} placeholder="URL 또는 텍스트" />
-					<div className="min-h-[20px] text-sm text-gray-600">{renderLink(currentRow?.linkUrl || '')}</div>
+					<div className="min-h-[20px] min-w-200 text-sm text-gray-600">{renderLink(currentRow?.linkUrl || '')}</div>
 				</div>
 			</TableCell>
 
@@ -187,7 +186,7 @@ const IssueWriteRow = ({
 				<Textarea
 					{...register(`rows.${index}.opinion`)}
 					placeholder="개선 방향이나 의견을 입력하세요"
-					className="min-h-120 resize-none"
+					className="min-h-120 min-w-200 resize-none"
 				/>
 			</TableCell>
 

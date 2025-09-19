@@ -83,8 +83,8 @@ const FormResponsePage = () => {
 
 	return (
 		<div className="space-y-24 p-24">
-			<div className="flex items-center justify-between">
-				<h1 className="text-4xl font-semibold">응답 관리</h1>
+			<div className="flex justify-between">
+				<h1 className="pl-32 text-4xl font-semibold whitespace-nowrap md:pl-0">응답 관리</h1>
 				<div className="flex gap-8">
 					<Button variant="outline" size="sm" onClick={handleMoveFormTemplate}>
 						<ExternalLink className="mr-8 h-16 w-16" />
