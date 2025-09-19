@@ -148,10 +148,10 @@ const DashboardPage = () => {
 
 	return (
 		<div className="space-y-24 p-24 pb-100">
-			<div className="flex items-center justify-between">
-				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
-				<div className="flex items-center gap-16">
-					<div className="text-muted-foreground text-2xl">
+			<div className="flex justify-between md:items-start lg:items-center">
+				<h1 className="text-4xl font-semibold whitespace-nowrap">보살핌 통합 대시보드</h1>
+				<div className="flex flex-col-reverse items-end gap-8 lg:flex-row lg:items-center">
+					<div className="text-muted-foreground text-2xl whitespace-nowrap">
 						마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
 					</div>
 					<div className="flex items-center gap-16">
@@ -197,7 +197,7 @@ const DashboardPage = () => {
 
 				<TabsContent value={activeDateTab} className="space-y-24">
 					{/* Secondary KPI Cards */}
-					<div className="grid grid-cols-1 gap-16 md:grid-cols-4">
+					<div className="grid grid-cols-1 gap-16 md:grid-cols-2 lg:grid-cols-4">
 						<KPICard
 							title="총 상담 건수"
 							value={valueUnitFormat(dashboardData?.dashTop.totalCount || 0, '건')}
@@ -244,7 +244,7 @@ const DashboardPage = () => {
 					</div>
 
 					{/* KPI Cards Section */}
-					<div className="grid grid-cols-1 gap-16 md:grid-cols-3 lg:grid-cols-6">
+					<div className="grid grid-cols-1 gap-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 						<KPICard
 							title="채팅 상담율"
 							value={valueUnitFormat(
