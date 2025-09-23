@@ -178,10 +178,7 @@ const DashboardPage = () => {
 				</TabsList>
 			</Tabs>
 
-			<Select
-				value={activeDivision === '' ? 'all' : activeDivision}
-				onValueChange={(value) => setActiveDivision(value)}
-			>
+			<Select value={activeDivision === '' ? 'all' : activeDivision} onValueChange={handleDivisionChange}>
 				<SelectTrigger className="w-full bg-white sm:hidden">
 					<SelectValue placeholder="선택" />
 				</SelectTrigger>
