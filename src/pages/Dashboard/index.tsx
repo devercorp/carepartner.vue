@@ -97,9 +97,8 @@ const DashboardPage = () => {
 
 	const handleDivisionChange = (value: string) => {
 		setActiveDivision(value);
-		setActiveDateTab('daily');
 		const params = Object.fromEntries(searchParams.entries());
-		setSearchParams({ ...params, dailyType: 'daily', categoryType: value });
+		setSearchParams({ ...params, categoryType: value });
 	};
 
 	const handleDateTabChange = (value: string) => {
