@@ -165,6 +165,7 @@ const FormResponsePage = () => {
 								<TableHead>전화번호</TableHead>
 								<TableHead>상담 만족도</TableHead>
 								<TableHead>대응 만족도</TableHead>
+								<TableHead>이전 문의 여부</TableHead>
 								<TableHead>내용</TableHead>
 								{/* <TableHead>작업</TableHead> */}
 							</TableRow>
@@ -192,6 +193,9 @@ const FormResponsePage = () => {
 										</TableCell>
 										<TableCell>
 											<Badge className={getSatisfactionColor(response.answerAccuracy)}>{response.answerAccuracy}</Badge>
+										</TableCell>
+										<TableCell className="max-w-xs truncate" title={response.previousContact}>
+											{response.previousContact || '-'}
 										</TableCell>
 										<TableCell className="max-w-xs truncate" title={response.freeComment}>
 											{response.freeComment || '-'}
