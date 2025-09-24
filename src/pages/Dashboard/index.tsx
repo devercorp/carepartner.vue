@@ -151,19 +151,19 @@ const DashboardPage = () => {
 	const formatTotalTags2 = (type: 'overall' | 'answer') => {
 		if (type === 'overall') {
 			return [
-				{ name: '1점', value: 0, color: '#DCFCE7' },
-				{ name: '2점', value: 0, color: '#BBF7D0' },
-				{ name: '3점', value: 0, color: '#86EFAC' },
-				{ name: '4점', value: 0, color: '#4ADE80' },
-				{ name: '5점', value: 0, color: '#10B981' },
+				{ name: '1점', value: dashboardData?.surveyPointCnt.overall.overallOne ?? 0, color: '#BBF7D0' },
+				{ name: '2점', value: dashboardData?.surveyPointCnt.overall.overallTwo ?? 0, color: '#86EFAC' },
+				{ name: '3점', value: dashboardData?.surveyPointCnt.overall.overallThree ?? 0, color: '#4ADE80' },
+				{ name: '4점', value: dashboardData?.surveyPointCnt.overall.overallFour ?? 0, color: '#22C55E' },
+				{ name: '5점', value: dashboardData?.surveyPointCnt.overall.overallFive ?? 0, color: '#16A34A' },
 			];
 		} else {
 			return [
-				{ name: '1점', value: 0, color: '#DBEAFE' }, // 매우 연한 파랑
-				{ name: '2점', value: 0, color: '#BFDBFE' }, // 연한 파랑
-				{ name: '3점', value: 0, color: '#93C5FD' }, // 중간 파랑
-				{ name: '4점', value: 0, color: '#60A5FA' }, // 진한 파랑
-				{ name: '5점', value: 0, color: '#3B82F6' },
+				{ name: '1점', value: dashboardData?.surveyPointCnt.answer.answerOne ?? 0, color: '#BFDBFE' },
+				{ name: '2점', value: dashboardData?.surveyPointCnt.answer.answerTwo ?? 0, color: '#93C5FD' },
+				{ name: '3점', value: dashboardData?.surveyPointCnt.answer.answerThree ?? 0, color: '#60A5FA' },
+				{ name: '4점', value: dashboardData?.surveyPointCnt.answer.answerFour ?? 0, color: '#3B82F6' },
+				{ name: '5점', value: dashboardData?.surveyPointCnt.answer.answerFive ?? 0, color: '#2563EB' },
 			];
 		}
 	};

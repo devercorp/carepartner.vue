@@ -110,6 +110,11 @@ export type DashboardResponseType = {
 	}[];
 
 	watingTime: { watingTime: string; watingTimeSeconds: number; ymd: string }[];
+
+	surveyPointCnt: {
+		answer: { answerFive: number; answerFour: number; answerOne: number; answerThree: number; answerTwo: number };
+		overall: { overallFive: number; overallFour: number; overallOne: number; overallThree: number; overallTwo: number };
+	};
 };
 
 export type TagsResponseType = {
