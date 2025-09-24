@@ -41,15 +41,15 @@ const trendLines = {
 		{ dataKey: 'normalCount', name: '일반', color: '#8B5CF6' },
 	],
 	division: [
-		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
 		{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
 		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
 		{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
 	],
 	academy: [
-		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
 		{ dataKey: 'inquiry', name: '문의', color: '#3B82F6' },
 		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
 		{ dataKey: 'acEtc', name: '기타', color: '#8B5CF6' },
 	],
 };
