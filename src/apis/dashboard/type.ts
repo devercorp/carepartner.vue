@@ -64,6 +64,12 @@ export type DashboardResponseType = {
 		howToUse?: number; // 사용법
 		error?: number; // 오류
 		etc?: number; // 기타
+
+		/** 전체 일 경우 */
+		academyCount?: number; // 아카데미 상담 건수
+		caregiverCount?: number; // 요양사 상담 건수
+		normalCount?: number; // 일반 상담 건수
+		orgCount?: number; // 기관 상담 건수
 	}[];
 
 	surveyOverallAvg: {

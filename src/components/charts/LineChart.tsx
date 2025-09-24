@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
 	LineChart as RechartsLineChart,
 	Line,
@@ -33,6 +33,19 @@ export function LineChart({ data, lines, title, height = 300, range, showLegend 
 			{} as Record<string, boolean>
 		)
 	);
+
+	// lines prop이 변경될 때마다 visibleLines state를 재설정
+	useEffect(() => {
+		setVisibleLines(
+			lines.reduce(
+				(acc, line) => {
+					acc[line.dataKey] = true;
+					return acc;
+				},
+				{} as Record<string, boolean>
+			)
+		);
+	}, [lines]);
 
 	// 표시될 라인 필터링
 	const visibleLinesData = lines.filter((line) => visibleLines[line.dataKey]);

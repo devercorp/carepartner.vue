@@ -1,5 +1,5 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
@@ -33,12 +33,20 @@ const DIVISION_TABS = [
 	{ label: '일반', value: CategoryType.NORMAL },
 ] as const;
 
-const trendLines = [
-	{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
-	{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
-	{ dataKey: 'error', name: '오류', color: '#10B981' },
-	{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
-];
+const trendLines = {
+	all: [
+		{ dataKey: 'academyCount', name: '아카데미', color: '#F59E0B' },
+		{ dataKey: 'caregiverCount', name: '요양사', color: '#3B82F6' },
+		{ dataKey: 'orgCount', name: '기관', color: '#10B981' },
+		{ dataKey: 'normalCount', name: '일반', color: '#8B5CF6' },
+	],
+	division: [
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
+		{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
+		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
+	],
+};
 
 const DashboardPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -110,12 +118,21 @@ const DashboardPage = () => {
 	const formatTotalTags = () => {
 		const channelData = dashboardData?.consultation.find((item) => item.dayIndex === 0);
 
-		return [
-			{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
-			{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
-			{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
-			{ name: '기타', value: channelData?.etc ?? 0, color: '#0f172a' },
-		];
+		if (activeDivision === '') {
+			return [
+				{ name: '아카데미', value: channelData?.academyCount ?? 0, color: '#F59E0B' },
+				{ name: '요양사', value: channelData?.caregiverCount ?? 0, color: '#3B82F6' },
+				{ name: '기관', value: channelData?.orgCount ?? 0, color: '#10B981' },
+				{ name: '일반', value: channelData?.normalCount ?? 0, color: '#8B5CF6' },
+			];
+		} else {
+			return [
+				{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
+				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
+				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
+				{ name: '기타', value: channelData?.etc ?? 0, color: '#8B5CF6' },
+			];
+		}
 	};
 
 	const formatWatingTime = useMemo(() => {
@@ -389,7 +406,7 @@ const DashboardPage = () => {
 														period: surveyPeriod(item.dayIndex),
 													})) ?? []),
 												].reverse()}
-												lines={trendLines}
+												lines={trendLines[activeDivision === '' ? 'all' : 'division']}
 												height={300}
 											/>
 										</CardContent>
