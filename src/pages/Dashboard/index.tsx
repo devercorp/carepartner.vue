@@ -422,7 +422,7 @@ const DashboardPage = () => {
 												{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
 												{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
 											]}
-											height={200}
+											height={300}
 											range={[0, 5]}
 										/>
 									</CardContent>
