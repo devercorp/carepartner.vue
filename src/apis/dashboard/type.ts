@@ -58,8 +58,8 @@ export type DashboardResponseType = {
 	};
 
 	consultation: {
-		dayIndex: number;
 		totalCount: number;
+		dayIndex: number;
 		inconvenience?: number; // 불편
 		howToUse?: number; // 사용법
 		error?: number; // 오류
@@ -70,6 +70,9 @@ export type DashboardResponseType = {
 		caregiverCount?: number; // 요양사 상담 건수
 		normalCount?: number; // 일반 상담 건수
 		orgCount?: number; // 기관 상담 건수
+
+		/** 아케데미일경우 */
+		ac_count?: number;
 	}[];
 
 	surveyOverallAvg: {
