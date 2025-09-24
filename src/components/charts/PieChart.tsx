@@ -17,7 +17,6 @@ export function PieChart({
 	dataKey,
 	nameKey = 'name',
 	title,
-	colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#6B7280'],
 	height = 300,
 	showLegend = true,
 	showLabels = true,
@@ -68,7 +67,7 @@ export function PieChart({
 					<div
 						className="h-12 w-12 rounded-sm"
 						style={{
-							backgroundColor: visibleItems[index] ? colors[index % colors.length] : '#d1d5db',
+							backgroundColor: visibleItems[index] ? item.color : '#d1d5db',
 						}}
 					/>
 					<span className="text-xl font-medium">{item[nameKey]}</span>
@@ -102,10 +101,7 @@ export function PieChart({
 						>
 							{filteredData.map((item, index) => {
 								// 원본 데이터에서의 인덱스 찾기
-								const originalIndex = data.findIndex(
-									(originalItem) => originalItem[nameKey] === item[nameKey] && originalItem[dataKey] === item[dataKey]
-								);
-								return <Cell key={`cell-${index}`} fill={colors[originalIndex % colors.length]} />;
+								return <Cell key={`cell-${index}`} fill={item.color} />;
 							})}
 						</Pie>
 						<Tooltip

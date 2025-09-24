@@ -46,6 +46,12 @@ const trendLines = {
 		{ dataKey: 'error', name: '오류', color: '#10B981' },
 		{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
 	],
+	academy: [
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
+		{ dataKey: 'inquiry', name: '문의', color: '#3B82F6' },
+		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'acEtc', name: '기타', color: '#8B5CF6' },
+	],
 };
 
 const DashboardPage = () => {
@@ -125,12 +131,39 @@ const DashboardPage = () => {
 				{ name: '기관', value: channelData?.orgCount ?? 0, color: '#10B981' },
 				{ name: '일반', value: channelData?.normalCount ?? 0, color: '#8B5CF6' },
 			];
+		} else if (activeDivision === CategoryType.ACADEMY) {
+			return [
+				{ name: '문의', value: channelData?.inquiry ?? 0, color: '#3B82F6' },
+				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
+				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
+				{ name: '기타', value: channelData?.acEtc ?? 0, color: '#8B5CF6' },
+			];
 		} else {
 			return [
 				{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
 				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
 				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
 				{ name: '기타', value: channelData?.etc ?? 0, color: '#8B5CF6' },
+			];
+		}
+	};
+
+	const formatTotalTags2 = (type: 'overall' | 'answer') => {
+		if (type === 'overall') {
+			return [
+				{ name: '1점', value: 0, color: '#DCFCE7' },
+				{ name: '2점', value: 0, color: '#BBF7D0' },
+				{ name: '3점', value: 0, color: '#86EFAC' },
+				{ name: '4점', value: 0, color: '#4ADE80' },
+				{ name: '5점', value: 0, color: '#10B981' },
+			];
+		} else {
+			return [
+				{ name: '1점', value: 0, color: '#DBEAFE' }, // 매우 연한 파랑
+				{ name: '2점', value: 0, color: '#BFDBFE' }, // 연한 파랑
+				{ name: '3점', value: 0, color: '#93C5FD' }, // 중간 파랑
+				{ name: '4점', value: 0, color: '#60A5FA' }, // 진한 파랑
+				{ name: '5점', value: 0, color: '#3B82F6' },
 			];
 		}
 	};
@@ -372,27 +405,45 @@ const DashboardPage = () => {
 					</div>
 					{!isLoading && (
 						<>
-							<Card>
-								<CardHeader>
-									<CardTitle>상담 만족도</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<LineChart
-										data={[
-											...(dashboardData?.surveyOverallAvg.map((item) => ({
-												...item,
-												period: surveyPeriod(item.dayIndex),
-											})) ?? []),
-										].reverse()}
-										lines={[
-											{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
-											{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
-										]}
-										height={200}
-										range={[0, 5]}
-									/>
-								</CardContent>
-							</Card>
+							<div className="grid grid-cols-1 gap-24 lg:grid-cols-2 2xl:grid-cols-3">
+								<Card className="col-span-1 lg:col-span-2 2xl:col-span-1">
+									<CardHeader>
+										<CardTitle>상담 만족도 평균 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<LineChart
+											data={[
+												...(dashboardData?.surveyOverallAvg.map((item) => ({
+													...item,
+													period: surveyPeriod(item.dayIndex),
+												})) ?? []),
+											].reverse()}
+											lines={[
+												{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
+												{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
+											]}
+											height={200}
+											range={[0, 5]}
+										/>
+									</CardContent>
+								</Card>
+								<Card>
+									<CardHeader>
+										<CardTitle>상담 만족도 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} />
+									</CardContent>
+								</Card>
+								<Card>
+									<CardHeader>
+										<CardTitle>대응 만족도 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} />
+									</CardContent>
+								</Card>
+							</div>
 
 							{/* Charts Section */}
 							{activeDivision !== CategoryType.NORMAL && (
@@ -409,7 +460,15 @@ const DashboardPage = () => {
 														period: surveyPeriod(item.dayIndex),
 													})) ?? []),
 												].reverse()}
-												lines={trendLines[activeDivision === '' ? 'all' : 'division']}
+												lines={
+													trendLines[
+														activeDivision === ''
+															? 'all'
+															: activeDivision === CategoryType.ACADEMY
+																? 'academy'
+																: 'division'
+													]
+												}
 												height={300}
 											/>
 										</CardContent>

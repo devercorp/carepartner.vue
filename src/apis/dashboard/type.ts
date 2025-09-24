@@ -72,7 +72,8 @@ export type DashboardResponseType = {
 		orgCount?: number; // 기관 상담 건수
 
 		/** 아케데미일경우 */
-		ac_count?: number;
+		inquiry?: number;
+		acEtc?: number;
 	}[];
 
 	surveyOverallAvg: {
