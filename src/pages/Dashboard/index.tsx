@@ -432,7 +432,7 @@ const DashboardPage = () => {
 										<CardTitle>상담 만족도 분포</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} />
+										<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} type="average" />
 									</CardContent>
 								</Card>
 								<Card>
@@ -440,7 +440,7 @@ const DashboardPage = () => {
 										<CardTitle>대응 만족도 분포</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} />
+										<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} type="average" />
 									</CardContent>
 								</Card>
 							</div>

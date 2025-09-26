@@ -10,6 +10,7 @@ interface PieChartProps {
 	height?: number;
 	showLegend?: boolean;
 	showLabels?: boolean;
+	type?: 'total' | 'average';
 }
 
 export function PieChart({
@@ -20,6 +21,7 @@ export function PieChart({
 	height = 300,
 	showLegend = true,
 	showLabels = true,
+	type = 'total',
 }: PieChartProps) {
 	// 각 항목의 표시/숨김 상태를 관리
 	const [visibleItems, setVisibleItems] = useState<Record<string, boolean>>(
@@ -38,6 +40,10 @@ export function PieChart({
 	// 전체 데이터 합계
 	const totalValue = data.reduce((sum, item) => sum + item[dataKey], 0);
 	const visibleTotalValue = filteredData.reduce((sum, item) => sum + item[dataKey], 0);
+
+	const averageValue =
+		Math.round((filteredData.reduce((sum, item, idx) => sum + item.value * (idx + 1), 0) / visibleTotalValue) * 10) /
+		10;
 
 	// 커스텀 라벨 렌더링 (값과 퍼센트 모두 표시)
 	const renderCustomLabel = (entry: any) => {
@@ -121,8 +127,10 @@ export function PieChart({
 				{/* 차트 중앙에 총합 표시 */}
 				<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 					<div className="text-center">
-						<div className="text-3xl font-bold text-gray-800">{visibleTotalValue.toLocaleString()}</div>
-						<div className="text-lg text-gray-500">총 건수</div>
+						<div className="text-3xl font-bold text-gray-800">
+							{type === 'total' ? visibleTotalValue.toLocaleString() : averageValue}
+						</div>
+						<div className="text-lg text-gray-500">{type === 'total' ? '총 건수' : '평균'}</div>
 					</div>
 				</div>
 			</div>
