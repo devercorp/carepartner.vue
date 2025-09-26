@@ -128,7 +128,7 @@ export function PieChart({
 				<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 					<div className="text-center">
 						<div className="text-3xl font-bold text-gray-800">
-							{type === 'total' ? visibleTotalValue.toLocaleString() : averageValue}
+							{type === 'total' ? visibleTotalValue.toLocaleString() : isNaN(averageValue) ? 0 : averageValue}
 						</div>
 						<div className="text-lg text-gray-500">{type === 'total' ? '총 건수' : '평균'}</div>
 					</div>
