@@ -109,6 +109,17 @@ export type DashboardResponseType = {
 		}[];
 	}[];
 
+	catMidSubNested2: {
+		category: string;
+		mids: {
+			midCategory: '요양사' | '기관' | '아카데미' | '일반';
+			subs: {
+				cnt: number;
+				subCategory: string;
+			}[];
+		}[];
+	}[];
+
 	dailyRate: {
 		curr_ratio_pct: number;
 		diff_pct: number;

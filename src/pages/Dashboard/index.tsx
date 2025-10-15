@@ -202,6 +202,35 @@ const DashboardPage = () => {
 		};
 	}, [dashboardData?.watingTime]);
 
+	const formatTagData = useMemo(() => {
+		const currentMids = dashboardData?.catMidSubNested[0]?.mids ?? [];
+		const previousMids = dashboardData?.catMidSubNested2[0]?.mids ?? [];
+
+		// 이전 데이터가 없으면 현재 데이터만 반환
+		if (previousMids.length === 0) {
+			return currentMids;
+		}
+
+		// 현재 데이터에 이전 데이터(prevCnt)를 조합
+		return currentMids.map((currentMid) => {
+			// 이전 데이터에서 같은 midCategory 찾기
+			const previousMid = previousMids.find((prevMid) => prevMid.midCategory === currentMid.midCategory);
+
+			return {
+				...currentMid,
+				subs: currentMid.subs.map((currentSub) => {
+					// 이전 데이터에서 같은 subCategory 찾기
+					const previousSub = previousMid?.subs.find((prevSub) => prevSub.subCategory === currentSub.subCategory);
+
+					return {
+						...currentSub,
+						prevCnt: previousSub?.cnt ?? 0,
+					};
+				}),
+			};
+		});
+	}, [dashboardData?.catMidSubNested, dashboardData?.catMidSubNested2]);
+
 	return (
 		<div className="space-y-24 p-24 pb-100">
 			<div className="flex justify-between">
@@ -500,7 +529,11 @@ const DashboardPage = () => {
 					{activeDivision !== '' && (
 						<TagChartBox
 							categoryType={activeDivision as CategoryType}
-							data={dashboardData?.catMidSubNested[0]?.mids ?? []}
+							data={formatTagData}
+							compareLabel={
+								activeDateTab === 'daily' ? '전일대비' : activeDateTab === 'weekly' ? '전주대비' : '전월대비'
+							}
+							currentLabel="현재"
 						/>
 					)}
 
