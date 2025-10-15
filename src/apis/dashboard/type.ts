@@ -13,6 +13,7 @@ export type DashboardParams = {
 	startDate: string;
 	excludeTags?: string;
 	topN?: number;
+	level: 'mid' | 'sub';
 };
 
 export type DashboardResponseType = {
@@ -90,6 +91,11 @@ export type DashboardResponseType = {
 		subCategory: string;
 		cnt: number;
 		trendPct?: number;
+
+		category: string;
+		level: 'mid' | 'sub';
+		midCategory: string;
+		name: string;
 	}[];
 
 	catMidSubNested: {

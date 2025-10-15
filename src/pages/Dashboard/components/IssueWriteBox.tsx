@@ -21,15 +21,16 @@ interface IssueWriteBoxProps {
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	data?: IssueResponseType[];
 	startDate: string;
+	category?: '요양사' | '기관' | '아카데미' | '일반';
 }
 
-const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
+const IssueWriteBox = ({ dailyType, data, startDate, category }: IssueWriteBoxProps) => {
 	const { control, register, handleSubmit, watch, setValue } = useForm<IssueWriteForm>({
 		defaultValues: {
 			rows: [
 				{
 					dailyType: dailyType,
-					category: '',
+					category: category ?? '',
 					midCategory: '',
 					subCategory: '',
 					orgCnt: 0,
@@ -70,7 +71,7 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 	const addRow = () => {
 		const newRow: IssueWriteFormType = {
 			dailyType: dailyType,
-			category: '',
+			category: category ?? '',
 			midCategory: '',
 			subCategory: '',
 			orgCnt: 0,
@@ -167,6 +168,7 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 										onMidCategoryChange={handleMidCategoryChange}
 										canDelete={fields.length > 1}
 										startDate={startDate}
+										isCategory={category ? true : false}
 									/>
 								))}
 							</TableBody>

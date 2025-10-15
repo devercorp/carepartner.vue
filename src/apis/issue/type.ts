@@ -13,6 +13,7 @@ export type IssueWriteFormType = {
 export type IssueResponseListParams = {
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	startDate: string;
+	category?: '요양사' | '기관' | '아카데미' | '일반';
 };
 
 export type IssueResponseListResponse = {

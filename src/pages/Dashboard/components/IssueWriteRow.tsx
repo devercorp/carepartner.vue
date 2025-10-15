@@ -24,6 +24,7 @@ interface IssueWriteRowProps {
 	onMidCategoryChange: (index: number, value: string) => void;
 	canDelete: boolean;
 	startDate: string;
+	isCategory?: boolean;
 }
 
 const IssueWriteRow = ({
@@ -36,6 +37,7 @@ const IssueWriteRow = ({
 	onMidCategoryChange,
 	canDelete,
 	startDate,
+	isCategory = false,
 }: IssueWriteRowProps) => {
 	// 현재 행의 데이터를 watch로 가져오기
 	const currentRow = watch(`rows.${index}`);
@@ -97,7 +99,11 @@ const IssueWriteRow = ({
 		<TableRow>
 			{/* 대분류 */}
 			<TableCell>
-				<Select value={currentRow?.category || ''} onValueChange={(value) => onCategoryChange(index, value)}>
+				<Select
+					value={currentRow?.category || ''}
+					onValueChange={(value) => onCategoryChange(index, value)}
+					disabled={isCategory}
+				>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder="선택" />
 					</SelectTrigger>
