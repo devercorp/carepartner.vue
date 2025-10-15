@@ -83,8 +83,8 @@ const FormResponsePage = () => {
 
 	return (
 		<div className="space-y-24 p-24">
-			<div className="flex items-center justify-between">
-				<h1 className="text-4xl font-semibold">응답 관리</h1>
+			<div className="flex justify-between">
+				<h1 className="pl-32 text-4xl font-semibold whitespace-nowrap md:pl-0">응답 관리</h1>
 				<div className="flex gap-8">
 					<Button variant="outline" size="sm" onClick={handleMoveFormTemplate}>
 						<ExternalLink className="mr-8 h-16 w-16" />
@@ -165,6 +165,7 @@ const FormResponsePage = () => {
 								<TableHead>전화번호</TableHead>
 								<TableHead>상담 만족도</TableHead>
 								<TableHead>대응 만족도</TableHead>
+								<TableHead>이전 문의 여부</TableHead>
 								<TableHead>내용</TableHead>
 								{/* <TableHead>작업</TableHead> */}
 							</TableRow>
@@ -192,6 +193,9 @@ const FormResponsePage = () => {
 										</TableCell>
 										<TableCell>
 											<Badge className={getSatisfactionColor(response.answerAccuracy)}>{response.answerAccuracy}</Badge>
+										</TableCell>
+										<TableCell className="max-w-xs truncate" title={response.previousContact}>
+											{response.previousContact || '-'}
 										</TableCell>
 										<TableCell className="max-w-xs truncate" title={response.freeComment}>
 											{response.freeComment || '-'}

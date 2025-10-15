@@ -21,20 +21,28 @@ interface IssueWriteBoxProps {
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	data?: IssueResponseType[];
 	startDate: string;
+	category?: '요양사' | '기관' | '아카데미' | '일반';
 }
 
-const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
-	const { control, register, handleSubmit, watch, setValue } = useForm<IssueWriteForm>({
+const IssueWriteBox = ({ dailyType, data, startDate, category }: IssueWriteBoxProps) => {
+	const {
+		control,
+		register,
+		handleSubmit,
+		watch,
+		setValue,
+		formState: { errors },
+	} = useForm<IssueWriteForm>({
 		defaultValues: {
 			rows: [
 				{
 					dailyType: dailyType,
-					category: '',
+					category: category ?? '',
 					midCategory: '',
 					subCategory: '',
 					orgCnt: 0,
 					issueDetail: '',
-					linkUrl: '',
+					links: [''],
 					opinion: '',
 				},
 			],
@@ -45,12 +53,12 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 					z.object({
 						issueReportId: z.number().optional(),
 						dailyType: z.enum(['daily', 'weekly', 'monthly']),
-						category: z.string(),
-						midCategory: z.string(),
-						subCategory: z.string(),
+						category: z.string().min(1, '대분류를 선택해주세요'),
+						midCategory: z.string().min(1, '중분류를 선택해주세요'),
+						subCategory: z.string().min(1, '소분류를 선택해주세요'),
 						orgCnt: z.number(),
 						issueDetail: z.string().optional(),
-						linkUrl: z.string().optional(),
+						links: z.array(z.string()).optional(),
 						opinion: z.string().optional(),
 					})
 				),
@@ -70,12 +78,12 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 	const addRow = () => {
 		const newRow: IssueWriteFormType = {
 			dailyType: dailyType,
-			category: '',
+			category: category ?? '',
 			midCategory: '',
 			subCategory: '',
 			orgCnt: 0,
 			issueDetail: '',
-			linkUrl: '',
+			links: [''],
 			opinion: '',
 		};
 		append(newRow);
@@ -108,11 +116,37 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 	};
 
 	// 폼 제출 핸들러
-	const onSubmit: SubmitHandler<IssueWriteForm> = (data) => {
+	const onSubmit: SubmitHandler<IssueWriteForm> = async (data) => {
 		console.log('Form Data:', data);
-		// TODO: API 호출 로직 추가
 
-		mutateSaveIssue(data.rows);
+		// links 배열을 linkUrl1, linkUrl2, linkUrl3, linkUrl4로 변환
+		const transformedRows = data.rows.map((row) => {
+			const { links, ...rest } = row;
+			const linkObj: Record<string, string> = {};
+
+			// links 배열을 linkUrl1~4로 변환
+			if (links && links.length > 0) {
+				links.forEach((link, idx) => {
+					if (link && idx < 4) {
+						linkObj[`linkUrl${idx + 1}`] = link;
+					}
+				});
+			}
+
+			return {
+				...rest,
+				linkUrl1: linkObj.linkUrl1 || '',
+				linkUrl2: linkObj.linkUrl2 || '',
+				linkUrl3: linkObj.linkUrl3 || '',
+				linkUrl4: linkObj.linkUrl4 || '',
+			};
+		});
+
+		mutateSaveIssue(transformedRows).then((res) => {
+			if (res.data.result === 'success') {
+				alert('저장되었습니다.');
+			}
+		});
 	};
 
 	const onError: SubmitErrorHandler<IssueWriteForm> = (error) => {
@@ -121,9 +155,28 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 
 	useEffect(() => {
 		if (data?.length && data.length > 0) {
-			setValue('rows', data, { shouldDirty: true });
+			// API 응답 데이터를 links 배열로 변환
+			const transformedData = data.map((row) => {
+				const links: string[] = [];
+
+				// linkUrl1~4를 배열로 변환
+				if (row.linkUrl1) links.push(row.linkUrl1);
+				if (row.linkUrl2) links.push(row.linkUrl2);
+				if (row.linkUrl3) links.push(row.linkUrl3);
+				if (row.linkUrl4) links.push(row.linkUrl4);
+
+				// 최소 1개는 있어야 함
+				if (links.length === 0) links.push('');
+
+				return {
+					...row,
+					links,
+				};
+			});
+
+			setValue('rows', transformedData, { shouldDirty: true });
 		}
-	}, [data]);
+	}, [data, setValue]);
 
 	return (
 		<div className="space-y-24">
@@ -167,6 +220,8 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 										onMidCategoryChange={handleMidCategoryChange}
 										canDelete={fields.length > 1}
 										startDate={startDate}
+										isCategory={category ? true : false}
+										errors={errors?.rows?.[index]}
 									/>
 								))}
 							</TableBody>

@@ -42,7 +42,7 @@ const FormTemplatePage = () => {
 				previousContact: z.enum(['YES', 'NO', 'NOT_SURE', '']).refine((value) => value !== '', {
 					message: '답변을 선택해주세요.',
 				}),
-				freeComment: z.string().optional(),
+				freeComment: z.string().max(200, '200자 이내로 작성해주세요.').optional(),
 			})
 		),
 	});
@@ -201,7 +201,13 @@ const FormTemplatePage = () => {
 								<Label htmlFor="description" className="text-2xl">
 									상담을 받으시며 느낀 점이나 개선되었으면 하는 부분이 있다면 자유롭게 남겨 주세요.
 								</Label>
-								<Textarea id="description" {...register('freeComment')} placeholder="내용" rows={5} />
+								<Textarea
+									id="description"
+									{...register('freeComment')}
+									placeholder="200자 이내로 작성해주세요."
+									rows={5}
+								/>
+								{errors.freeComment && <p className="text-xl text-red-500">{errors.freeComment.message}</p>}
 							</div>
 
 							<Button type="submit" className="w-full" size="lg" disabled={isPending}>

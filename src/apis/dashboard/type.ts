@@ -13,6 +13,7 @@ export type DashboardParams = {
 	startDate: string;
 	excludeTags?: string;
 	topN?: number;
+	level: 'mid' | 'sub';
 };
 
 export type DashboardResponseType = {
@@ -58,12 +59,22 @@ export type DashboardResponseType = {
 	};
 
 	consultation: {
-		dayIndex: number;
 		totalCount: number;
+		dayIndex: number;
 		inconvenience?: number; // 불편
 		howToUse?: number; // 사용법
 		error?: number; // 오류
 		etc?: number; // 기타
+
+		/** 전체 일 경우 */
+		academyCount?: number; // 아카데미 상담 건수
+		caregiverCount?: number; // 요양사 상담 건수
+		normalCount?: number; // 일반 상담 건수
+		orgCount?: number; // 기관 상담 건수
+
+		/** 아케데미일경우 */
+		inquiry?: number;
+		acEtc?: number;
 	}[];
 
 	surveyOverallAvg: {
@@ -80,6 +91,11 @@ export type DashboardResponseType = {
 		subCategory: string;
 		cnt: number;
 		trendPct?: number;
+
+		category: string;
+		level: 'mid' | 'sub';
+		midCategory: string;
+		name: string;
 	}[];
 
 	catMidSubNested: {
@@ -100,6 +116,11 @@ export type DashboardResponseType = {
 	}[];
 
 	watingTime: { watingTime: string; watingTimeSeconds: number; ymd: string }[];
+
+	surveyPointCnt: {
+		answer: { answerFive: number; answerFour: number; answerOne: number; answerThree: number; answerTwo: number };
+		overall: { overallFive: number; overallFour: number; overallOne: number; overallThree: number; overallTwo: number };
+	};
 };
 
 export type TagsResponseType = {

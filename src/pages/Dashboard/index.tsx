@@ -1,5 +1,5 @@
 import { Users, MessageCircle, Phone, Clock, CheckCircle, Star } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetDashboard } from '@/apis/dashboard';
@@ -11,6 +11,7 @@ import WeekPicker from '@/components/common/DatePicker/WeekPicker';
 import Modal from '@/components/common/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -24,6 +25,13 @@ import TagChartBox from './components/TagChartBox';
 import TagsFilterModal from './components/modal/TagsFilterModal';
 import { calculateRatio, calculateTrend, calculateTimeDifference, valueUnitFormat } from './utils/dataFormat';
 
+const CATEGORY_ENUMS: Record<CategoryType, '요양사' | '기관' | '아카데미' | '일반'> = {
+	caregiver: '요양사',
+	org: '기관',
+	academy: '아카데미',
+	normal: '일반',
+} as const;
+
 const DIVISION_TABS = [
 	{ label: '전체', value: '' },
 	{ label: '요양사', value: CategoryType.CAREGIVER },
@@ -32,12 +40,26 @@ const DIVISION_TABS = [
 	{ label: '일반', value: CategoryType.NORMAL },
 ] as const;
 
-const trendLines = [
-	{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
-	{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
-	{ dataKey: 'error', name: '오류', color: '#10B981' },
-	{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
-];
+const trendLines = {
+	all: [
+		{ dataKey: 'academyCount', name: '아카데미', color: '#F59E0B' },
+		{ dataKey: 'caregiverCount', name: '요양사', color: '#3B82F6' },
+		{ dataKey: 'orgCount', name: '기관', color: '#10B981' },
+		{ dataKey: 'normalCount', name: '일반', color: '#8B5CF6' },
+	],
+	division: [
+		{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
+		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
+		{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
+	],
+	academy: [
+		{ dataKey: 'inquiry', name: '문의', color: '#3B82F6' },
+		{ dataKey: 'error', name: '오류', color: '#10B981' },
+		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
+		{ dataKey: 'acEtc', name: '기타', color: '#8B5CF6' },
+	],
+};
 
 const DashboardPage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +69,7 @@ const DashboardPage = () => {
 	const [activeDivision, setActiveDivision] = useState<string>(String(searchParams.get('categoryType') ?? ''));
 	const [activeDateTab, setActiveDateTab] = useState<string>(searchParams.get('dailyType') ?? 'daily');
 	const [topN, setTopN] = useState<number>(topCount);
+	const [level, setLevel] = useState<'mid' | 'sub'>('sub');
 
 	const [selectedDate, setSelectedDate] = useState<string>(
 		searchParams.get('startDate') ?? new Date().toISOString().split('T')[0]
@@ -58,11 +81,13 @@ const DashboardPage = () => {
 		startDate: selectedDate,
 		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')) : '',
 		topN: topCount,
+		level: level,
 	});
 
 	const { data: issueData } = useGetIssueResponseList({
 		startDate: selectedDate,
 		dailyType: activeDateTab as 'daily' | 'weekly' | 'monthly',
+		category: CATEGORY_ENUMS[activeDivision as CategoryType],
 	});
 
 	const kpiPeriod = useMemo(
@@ -96,9 +121,8 @@ const DashboardPage = () => {
 
 	const handleDivisionChange = (value: string) => {
 		setActiveDivision(value);
-		setActiveDateTab('daily');
 		const params = Object.fromEntries(searchParams.entries());
-		setSearchParams({ ...params, dailyType: 'daily', categoryType: value });
+		setSearchParams({ ...params, categoryType: value });
 	};
 
 	const handleDateTabChange = (value: string) => {
@@ -110,12 +134,48 @@ const DashboardPage = () => {
 	const formatTotalTags = () => {
 		const channelData = dashboardData?.consultation.find((item) => item.dayIndex === 0);
 
-		return [
-			{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
-			{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
-			{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
-			{ name: '기타', value: channelData?.etc ?? 0, color: '#0f172a' },
-		];
+		if (activeDivision === '') {
+			return [
+				{ name: '아카데미', value: channelData?.academyCount ?? 0, color: '#F59E0B' },
+				{ name: '요양사', value: channelData?.caregiverCount ?? 0, color: '#3B82F6' },
+				{ name: '기관', value: channelData?.orgCount ?? 0, color: '#10B981' },
+				{ name: '일반', value: channelData?.normalCount ?? 0, color: '#8B5CF6' },
+			];
+		} else if (activeDivision === CategoryType.ACADEMY) {
+			return [
+				{ name: '문의', value: channelData?.inquiry ?? 0, color: '#3B82F6' },
+				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
+				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
+				{ name: '기타', value: channelData?.acEtc ?? 0, color: '#8B5CF6' },
+			];
+		} else {
+			return [
+				{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
+				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
+				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
+				{ name: '기타', value: channelData?.etc ?? 0, color: '#8B5CF6' },
+			];
+		}
+	};
+
+	const formatTotalTags2 = (type: 'overall' | 'answer') => {
+		if (type === 'overall') {
+			return [
+				{ name: '1점', value: dashboardData?.surveyPointCnt.overall.overallOne ?? 0, color: '#BBF7D0' },
+				{ name: '2점', value: dashboardData?.surveyPointCnt.overall.overallTwo ?? 0, color: '#86EFAC' },
+				{ name: '3점', value: dashboardData?.surveyPointCnt.overall.overallThree ?? 0, color: '#4ADE80' },
+				{ name: '4점', value: dashboardData?.surveyPointCnt.overall.overallFour ?? 0, color: '#22C55E' },
+				{ name: '5점', value: dashboardData?.surveyPointCnt.overall.overallFive ?? 0, color: '#16A34A' },
+			];
+		} else {
+			return [
+				{ name: '1점', value: dashboardData?.surveyPointCnt.answer.answerOne ?? 0, color: '#BFDBFE' },
+				{ name: '2점', value: dashboardData?.surveyPointCnt.answer.answerTwo ?? 0, color: '#93C5FD' },
+				{ name: '3점', value: dashboardData?.surveyPointCnt.answer.answerThree ?? 0, color: '#60A5FA' },
+				{ name: '4점', value: dashboardData?.surveyPointCnt.answer.answerFour ?? 0, color: '#3B82F6' },
+				{ name: '5점', value: dashboardData?.surveyPointCnt.answer.answerFive ?? 0, color: '#2563EB' },
+			];
+		}
 	};
 
 	const formatWatingTime = useMemo(() => {
@@ -142,16 +202,12 @@ const DashboardPage = () => {
 		};
 	}, [dashboardData?.watingTime]);
 
-	useEffect(() => {
-		console.log(searchParams.get('excludeTags'));
-	}, [searchParams]);
-
 	return (
 		<div className="space-y-24 p-24 pb-100">
-			<div className="flex items-center justify-between">
-				<h1 className="text-4xl font-semibold">보살핌 통합 대시보드</h1>
-				<div className="flex items-center gap-16">
-					<div className="text-muted-foreground text-2xl">
+			<div className="flex justify-between">
+				<h1 className="pl-32 text-4xl font-semibold whitespace-nowrap md:pl-0">통합 대시보드</h1>
+				<div className="flex flex-col-reverse items-end gap-8 lg:flex-row lg:items-center">
+					<div className="text-muted-foreground xs:text-2xl text-end text-xl">
 						마지막 업데이트 날짜: {dashboardData?.lastUpload ? new Date(dashboardData.lastUpload).toLocaleString() : ''}
 					</div>
 					<div className="flex items-center gap-16">
@@ -162,13 +218,13 @@ const DashboardPage = () => {
 				</div>
 			</div>
 
-			<Tabs value={activeDivision} onValueChange={handleDivisionChange}>
-				<TabsList className="w-full bg-transparent p-0">
+			<Tabs value={activeDivision} onValueChange={handleDivisionChange} className="hidden sm:flex">
+				<TabsList className="w-auto overflow-x-auto bg-transparent md:p-0">
 					{DIVISION_TABS.map((division) => (
 						<TabsTrigger
 							key={division.value}
 							className={cn(
-								'border-0 font-semibold data-[state=active]:text-green-600',
+								'min-w-80 border-0 font-semibold data-[state=active]:text-green-600',
 								'border-b-2 border-gray-200 data-[state=active]:border-0 data-[state=active]:border-b-2',
 								'data-[state=active]:border-green-600',
 								'rounded-none data-[state=active]:bg-transparent',
@@ -182,22 +238,50 @@ const DashboardPage = () => {
 				</TabsList>
 			</Tabs>
 
+			<Select value={activeDivision === '' ? 'all' : activeDivision} onValueChange={handleDivisionChange}>
+				<SelectTrigger className="w-full bg-white sm:hidden">
+					<SelectValue placeholder="선택" />
+				</SelectTrigger>
+				<SelectContent>
+					{DIVISION_TABS.map((division) => {
+						const value = division.value === '' ? 'all' : division.value;
+						return (
+							<SelectItem key={value} value={value}>
+								{division.label}
+							</SelectItem>
+						);
+					})}
+				</SelectContent>
+			</Select>
+
 			<Tabs className="gap-24" value={activeDateTab} onValueChange={handleDateTabChange}>
-				<div className="flex items-center gap-16">
-					<TabsList>
-						<TabsTrigger value="daily">일간</TabsTrigger>
-						<TabsTrigger value="weekly">주간</TabsTrigger>
-						<TabsTrigger value="monthly">월간</TabsTrigger>
+				<div className="flex flex-col items-center gap-16 sm:flex-row">
+					<TabsList className="w-full sm:w-auto">
+						<TabsTrigger value="daily" className="min-w-80">
+							일간
+						</TabsTrigger>
+						<TabsTrigger value="weekly" className="min-w-80">
+							주간
+						</TabsTrigger>
+						<TabsTrigger value="monthly" className="min-w-80">
+							월간
+						</TabsTrigger>
 					</TabsList>
 
-					{activeDateTab === 'daily' && <DatePicker onChange={handleDateChange} value={selectedDate} />}
-					{activeDateTab === 'weekly' && <WeekPicker onChange={handleDateChange} value={selectedDate} />}
-					{activeDateTab === 'monthly' && <MonthPicker onChange={handleDateChange} value={selectedDate} />}
+					{activeDateTab === 'daily' && (
+						<DatePicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
+					{activeDateTab === 'weekly' && (
+						<WeekPicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
+					{activeDateTab === 'monthly' && (
+						<MonthPicker className="w-full sm:w-auto" onChange={handleDateChange} value={selectedDate} />
+					)}
 				</div>
 
 				<TabsContent value={activeDateTab} className="space-y-24">
 					{/* Secondary KPI Cards */}
-					<div className="grid grid-cols-1 gap-16 md:grid-cols-4">
+					<div className="grid grid-cols-1 gap-16 md:grid-cols-2 lg:grid-cols-4">
 						<KPICard
 							title="총 상담 건수"
 							value={valueUnitFormat(dashboardData?.dashTop.totalCount || 0, '건')}
@@ -244,7 +328,7 @@ const DashboardPage = () => {
 					</div>
 
 					{/* KPI Cards Section */}
-					<div className="grid grid-cols-1 gap-16 md:grid-cols-3 lg:grid-cols-6">
+					<div className="grid grid-cols-1 gap-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 						<KPICard
 							title="채팅 상담율"
 							value={valueUnitFormat(
@@ -331,24 +415,45 @@ const DashboardPage = () => {
 					</div>
 					{!isLoading && (
 						<>
-							<Card>
-								<CardHeader>
-									<CardTitle>상담 만족도</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<LineChart
-										data={[
-											...(dashboardData?.surveyOverallAvg.map((item) => ({
-												...item,
-												period: surveyPeriod(item.dayIndex),
-											})) ?? []),
-										].reverse()}
-										lines={[{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' }]}
-										height={200}
-										range={[0, 5]}
-									/>
-								</CardContent>
-							</Card>
+							<div className="grid grid-cols-1 gap-24 lg:grid-cols-2 2xl:grid-cols-3">
+								<Card className="col-span-1 lg:col-span-2 2xl:col-span-1">
+									<CardHeader>
+										<CardTitle>상담 만족도 평균 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<LineChart
+											data={[
+												...(dashboardData?.surveyOverallAvg.map((item) => ({
+													...item,
+													period: surveyPeriod(item.dayIndex),
+												})) ?? []),
+											].reverse()}
+											lines={[
+												{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
+												{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
+											]}
+											height={300}
+											range={[0, 5]}
+										/>
+									</CardContent>
+								</Card>
+								<Card>
+									<CardHeader>
+										<CardTitle>상담 만족도 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} type="average" />
+									</CardContent>
+								</Card>
+								<Card>
+									<CardHeader>
+										<CardTitle>대응 만족도 분포</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} type="average" />
+									</CardContent>
+								</Card>
+							</div>
 
 							{/* Charts Section */}
 							{activeDivision !== CategoryType.NORMAL && (
@@ -365,7 +470,15 @@ const DashboardPage = () => {
 														period: surveyPeriod(item.dayIndex),
 													})) ?? []),
 												].reverse()}
-												lines={trendLines}
+												lines={
+													trendLines[
+														activeDivision === ''
+															? 'all'
+															: activeDivision === CategoryType.ACADEMY
+																? 'academy'
+																: 'division'
+													]
+												}
 												height={300}
 											/>
 										</CardContent>
@@ -395,6 +508,7 @@ const DashboardPage = () => {
 						data={issueData?.issuedList ?? []}
 						dailyType={activeDateTab as 'daily' | 'weekly' | 'monthly'}
 						startDate={selectedDate}
+						category={CATEGORY_ENUMS[activeDivision as CategoryType]}
 					/>
 
 					{/* Weekly/Monthly Specific Content */}
@@ -404,6 +518,17 @@ const DashboardPage = () => {
 								title={`인입이 높은 태그 top ${topCount} (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
 								actionsRender={
 									<div className="flex items-center gap-8">
+										<Select value={level} onValueChange={(value) => setLevel(value as 'mid' | 'sub')}>
+											<SelectTrigger className="w-100">
+												<SelectValue placeholder="선택" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													<SelectItem value="mid">중분류</SelectItem>
+													<SelectItem value="sub">소분류</SelectItem>
+												</SelectGroup>
+											</SelectContent>
+										</Select>
 										<Input
 											className="w-100"
 											type="number"
@@ -419,7 +544,7 @@ const DashboardPage = () => {
 								data={dashboardData?.topTags.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
 								columns={[
 									{ key: 'no', label: '번호', type: 'number' },
-									{ key: 'subCategory', label: '태그명', type: 'text' },
+									{ key: 'name', label: '태그명', type: 'text' },
 									{ key: 'cnt', label: '건수', type: 'number' },
 									{ key: 'trendPct', label: '추이', type: 'trend' },
 								]}

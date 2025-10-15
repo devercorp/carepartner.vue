@@ -10,6 +10,7 @@ interface PieChartProps {
 	height?: number;
 	showLegend?: boolean;
 	showLabels?: boolean;
+	type?: 'total' | 'average';
 }
 
 export function PieChart({
@@ -17,10 +18,10 @@ export function PieChart({
 	dataKey,
 	nameKey = 'name',
 	title,
-	colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#6B7280'],
 	height = 300,
 	showLegend = true,
 	showLabels = true,
+	type = 'total',
 }: PieChartProps) {
 	// 각 항목의 표시/숨김 상태를 관리
 	const [visibleItems, setVisibleItems] = useState<Record<string, boolean>>(
@@ -39,6 +40,10 @@ export function PieChart({
 	// 전체 데이터 합계
 	const totalValue = data.reduce((sum, item) => sum + item[dataKey], 0);
 	const visibleTotalValue = filteredData.reduce((sum, item) => sum + item[dataKey], 0);
+
+	const averageValue =
+		Math.round((filteredData.reduce((sum, item, idx) => sum + item.value * (idx + 1), 0) / visibleTotalValue) * 10) /
+		10;
 
 	// 커스텀 라벨 렌더링 (값과 퍼센트 모두 표시)
 	const renderCustomLabel = (entry: any) => {
@@ -68,7 +73,7 @@ export function PieChart({
 					<div
 						className="h-12 w-12 rounded-sm"
 						style={{
-							backgroundColor: visibleItems[index] ? colors[index % colors.length] : '#d1d5db',
+							backgroundColor: visibleItems[index] ? item.color : '#d1d5db',
 						}}
 					/>
 					<span className="text-xl font-medium">{item[nameKey]}</span>
@@ -102,10 +107,7 @@ export function PieChart({
 						>
 							{filteredData.map((item, index) => {
 								// 원본 데이터에서의 인덱스 찾기
-								const originalIndex = data.findIndex(
-									(originalItem) => originalItem[nameKey] === item[nameKey] && originalItem[dataKey] === item[dataKey]
-								);
-								return <Cell key={`cell-${index}`} fill={colors[originalIndex % colors.length]} />;
+								return <Cell key={`cell-${index}`} fill={item.color} />;
 							})}
 						</Pie>
 						<Tooltip
@@ -125,8 +127,10 @@ export function PieChart({
 				{/* 차트 중앙에 총합 표시 */}
 				<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 					<div className="text-center">
-						<div className="text-3xl font-bold text-gray-800">{visibleTotalValue.toLocaleString()}</div>
-						<div className="text-lg text-gray-500">총 건수</div>
+						<div className="text-3xl font-bold text-gray-800">
+							{type === 'total' ? visibleTotalValue.toLocaleString() : isNaN(averageValue) ? 0 : averageValue}
+						</div>
+						<div className="text-lg text-gray-500">{type === 'total' ? '총 건수' : '평균'}</div>
 					</div>
 				</div>
 			</div>
