@@ -1,5 +1,8 @@
-import { ExternalLink, Plus, Trash2, X } from 'lucide-react';
-import { FieldErrors, UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Edit, ExternalLink, Plus, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import z from 'zod';
 
 import { fetchGetIssueCnt } from '@/apis/issue';
 import { IssueWriteFormType } from '@/apis/issue/type';
@@ -10,43 +13,81 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { TAG_TABLE } from '@/constants/tags';
 
-interface IssueWriteForm {
-	rows: IssueWriteFormType[];
-}
-
 interface IssueWriteRowProps {
+	data: IssueWriteFormType;
 	index: number;
-	register: UseFormRegister<IssueWriteForm>;
-	watch: UseFormWatch<IssueWriteForm>;
-	setValue: UseFormSetValue<IssueWriteForm>;
 	removeRow: (index: number) => void;
-	onCategoryChange: (index: number, value: string) => void;
-	onMidCategoryChange: (index: number, value: string) => void;
+	onSave: (index: number, data: IssueWriteFormType) => void;
 	canDelete: boolean;
 	startDate: string;
 	isCategory?: boolean;
-	errors?: FieldErrors<IssueWriteFormType>;
 }
 
 const IssueWriteRow = ({
+	data,
 	index,
-	register,
-	watch,
-	setValue,
 	removeRow,
-	onCategoryChange,
-	onMidCategoryChange,
+	onSave,
 	canDelete,
 	startDate,
 	isCategory = false,
-	errors,
 }: IssueWriteRowProps) => {
-	// 현재 행의 데이터를 watch로 가져오기
-	const currentRow = watch(`rows.${index}`);
+	// 새로운 행(issueReportId가 없는 경우)은 자동으로 편집 모드
+	const [isEdit, setIsEdit] = useState<boolean>(!data?.issueReportId);
+
+	const {
+		register,
+		handleSubmit,
+		watch,
+		setValue,
+		reset,
+		formState: { errors },
+	} = useForm<IssueWriteFormType>({
+		defaultValues: data,
+		resolver: zodResolver(
+			z.object({
+				issueReportId: z.number().optional(),
+				dailyType: z.enum(['daily', 'weekly', 'monthly']),
+				category: z.string().min(1, '대분류를 선택해주세요'),
+				midCategory: z.string().min(1, '중분류를 선택해주세요'),
+				subCategory: z.string().min(1, '소분류를 선택해주세요'),
+				orgCnt: z.number(),
+				issueDetail: z.string().optional(),
+				links: z.array(z.string()).optional(),
+				opinion: z.string().optional(),
+			})
+		),
+	});
+
+	// data prop이 변경될 때 폼 값 업데이트
+	useEffect(() => {
+		reset(data);
+	}, [data, reset]);
+
+	// watch를 사용하여 현재 폼 값 추적
+	const watchedCategory = watch('category');
+	const watchedMidCategory = watch('midCategory');
+	const watchedSubCategory = watch('subCategory');
+	const watchedLinks = watch('links') || [''];
+
+	// 카테고리 연계 업데이트 (대분류 변경 시 하위 분류 초기화)
+	const handleCategoryChange = (value: string) => {
+		setValue('category', value);
+		setValue('midCategory', '');
+		setValue('subCategory', '');
+		setValue('orgCnt', 0);
+	};
+
+	// 중분류 변경 시 소분류 초기화
+	const handleMidCategoryChange = (value: string) => {
+		setValue('midCategory', value);
+		setValue('subCategory', '');
+		setValue('orgCnt', 0);
+	};
 
 	// links 배열이 없으면 초기화
-	if (!currentRow?.links || currentRow.links.length === 0) {
-		setValue(`rows.${index}.links`, ['']);
+	if (!data?.links || data.links.length === 0) {
+		data.links = [''];
 	}
 
 	// 링크 렌더링 함수
@@ -77,54 +118,97 @@ const IssueWriteRow = ({
 
 	// 선택된 대분류에 따른 중분류 옵션
 	const getMidCategories = () => {
-		const selectedCategory = TAG_TABLE.find((cat) => cat.name === currentRow?.category);
+		const selectedCategory = TAG_TABLE.find((cat) => cat.name === watchedCategory);
 		return selectedCategory?.sub || [];
 	};
 
 	// 선택된 중분류에 따른 소분류 옵션
 	const getSubCategories = () => {
-		const selectedCategory = TAG_TABLE.find((cat) => cat.name === currentRow?.category);
-		const selectedMidCategory = selectedCategory?.sub.find((mid) => mid.name === currentRow?.midCategory);
+		const selectedCategory = TAG_TABLE.find((cat) => cat.name === watchedCategory);
+		const selectedMidCategory = selectedCategory?.sub.find((mid) => mid.name === watchedMidCategory);
 		return selectedMidCategory?.sub || [];
 	};
 
 	const handleSubCategoryChange = async (value: string) => {
-		setValue(`rows.${index}.subCategory`, value);
+		setValue('subCategory', value);
 
-		const data = await fetchGetIssueCnt({
-			startDate: startDate,
-			dailyType: currentRow?.dailyType || '',
-			category: currentRow?.category || '',
-			midCategory: currentRow?.midCategory || '',
-			subCategory: value,
-		});
+		try {
+			const res = await fetchGetIssueCnt({
+				startDate: startDate,
+				dailyType: data?.dailyType || '',
+				category: watchedCategory || '',
+				midCategory: watchedMidCategory || '',
+				subCategory: value,
+			});
 
-		setValue(`rows.${index}.orgCnt`, data.data.data.count);
+			setValue('orgCnt', res.data.data.count);
+		} catch (error) {
+			console.error('건수 조회 실패:', error);
+			setValue('orgCnt', 0);
+		}
 	};
 
 	// 링크 추가
 	const addLinkField = () => {
-		const currentLinks = currentRow?.links || [''];
+		const currentLinks = watchedLinks;
 		if (currentLinks.length < 4) {
-			setValue(`rows.${index}.links`, [...currentLinks, '']);
+			setValue('links', [...currentLinks, '']);
 		}
 	};
 
 	// 링크 삭제
 	const removeLinkField = (linkIndex: number) => {
-		const currentLinks = currentRow?.links || [''];
+		const currentLinks = watchedLinks;
 		if (currentLinks.length > 1) {
 			const newLinks = currentLinks.filter((_, idx) => idx !== linkIndex);
-			setValue(`rows.${index}.links`, newLinks);
+			setValue('links', newLinks);
 		}
 	};
 
 	// 링크 값 변경
 	const handleLinkChange = (linkIndex: number, value: string) => {
-		const currentLinks = currentRow?.links || [''];
+		const currentLinks = watchedLinks;
 		const newLinks = [...currentLinks];
 		newLinks[linkIndex] = value;
-		setValue(`rows.${index}.links`, newLinks);
+		setValue('links', newLinks);
+	};
+
+	// 폼 제출 핸들러
+	const onSubmit: SubmitHandler<IssueWriteFormType> = async (formData) => {
+		console.log('Form Data:', formData);
+
+		try {
+			// 부모 컴포넌트의 onSave 호출
+			await onSave(index, formData);
+
+			// 저장 성공 시 편집 모드 해제
+			setIsEdit(false);
+		} catch (error) {
+			console.error('저장 실패:', error);
+		}
+	};
+
+	const onError: SubmitErrorHandler<IssueWriteFormType> = (error) => {
+		console.log('Error:', error);
+		alert('입력값을 확인해주세요.');
+	};
+
+	// 취소 핸들러
+	const handleCancel = () => {
+		// 새로운 행인 경우 삭제
+		if (!data?.issueReportId) {
+			removeRow(index);
+		} else {
+			// 기존 행인 경우 원래 데이터로 복원
+			setValue('category', data.category);
+			setValue('midCategory', data.midCategory);
+			setValue('subCategory', data.subCategory);
+			setValue('orgCnt', data.orgCnt);
+			setValue('issueDetail', data.issueDetail || '');
+			setValue('links', data.links || ['']);
+			setValue('opinion', data.opinion || '');
+			setIsEdit(false);
+		}
 	};
 
 	return (
@@ -133,9 +217,9 @@ const IssueWriteRow = ({
 			<TableCell>
 				<div className="space-y-8">
 					<Select
-						value={currentRow?.category || ''}
-						onValueChange={(value) => onCategoryChange(index, value)}
-						disabled={isCategory}
+						value={watchedCategory || ''}
+						onValueChange={(value) => handleCategoryChange(value)}
+						disabled={isCategory || !isEdit}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="선택" />
@@ -156,9 +240,9 @@ const IssueWriteRow = ({
 			<TableCell>
 				<div className="space-y-8">
 					<Select
-						value={currentRow?.midCategory || ''}
-						onValueChange={(value) => onMidCategoryChange(index, value)}
-						disabled={!currentRow?.category}
+						value={watchedMidCategory || ''}
+						onValueChange={(value) => handleMidCategoryChange(value)}
+						disabled={!watchedCategory || !isEdit}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="선택" />
@@ -179,9 +263,9 @@ const IssueWriteRow = ({
 			<TableCell>
 				<div className="space-y-8">
 					<Select
-						value={currentRow?.subCategory || ''}
+						value={watchedSubCategory || ''}
 						onValueChange={handleSubCategoryChange}
-						disabled={!currentRow?.category || !currentRow?.midCategory}
+						disabled={!watchedCategory || !watchedMidCategory || !isEdit}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="선택" />
@@ -201,22 +285,24 @@ const IssueWriteRow = ({
 			{/* 기간별 건수 조회 */}
 			<TableCell>
 				<Input
-					{...register(`rows.${index}.orgCnt`, {
-						valueAsNumber: true,
-					})}
 					className="text-end"
 					placeholder="건수"
 					min="0"
 					readOnly
+					disabled={!isEdit}
+					{...register(`orgCnt`, {
+						valueAsNumber: true,
+					})}
 				/>
 			</TableCell>
 
 			{/* Issue 상세 */}
 			<TableCell>
 				<Textarea
-					{...register(`rows.${index}.issueDetail`)}
 					placeholder="이슈 상세 내용을 입력하세요"
 					className="min-h-120 min-w-200 resize-none"
+					disabled={!isEdit}
+					{...register(`issueDetail`)}
 				/>
 			</TableCell>
 
@@ -224,19 +310,22 @@ const IssueWriteRow = ({
 			<TableCell>
 				<div className="space-y-8">
 					<div className="space-y-4">
-						{(currentRow?.links || ['']).map((link, linkIndex) => (
+						{watchedLinks.map((link, linkIndex) => (
 							<div key={linkIndex} className="flex items-start gap-4">
 								<div className="flex-1 space-y-8">
 									<Input
 										value={link}
 										onChange={(e) => handleLinkChange(linkIndex, e.target.value)}
 										placeholder={`링크 ${linkIndex + 1}`}
+										disabled={!isEdit}
 									/>
-									<div className="text-md min-h-[20px] max-w-300 min-w-200 truncate text-gray-600">
-										{renderLink(link || '')}
-									</div>
+									{!isEdit && (
+										<div className="text-md min-h-[20px] max-w-300 min-w-200 truncate text-gray-600">
+											{renderLink(link || '')}
+										</div>
+									)}
 								</div>
-								{(currentRow?.links?.length || 0) > 1 && (
+								{watchedLinks.length > 1 && isEdit && (
 									<Button
 										type="button"
 										variant="ghost"
@@ -249,7 +338,7 @@ const IssueWriteRow = ({
 								)}
 							</div>
 						))}
-						{(currentRow?.links?.length || 0) < 4 && (
+						{watchedLinks.length < 4 && isEdit && (
 							<Button type="button" variant="outline" size="sm" onClick={addLinkField} className="w-full">
 								<Plus className="mr-4 h-14 w-14" />
 								링크 추가
@@ -262,24 +351,59 @@ const IssueWriteRow = ({
 			{/* 의견 */}
 			<TableCell>
 				<Textarea
-					{...register(`rows.${index}.opinion`)}
 					placeholder="개선 방향이나 의견을 입력하세요"
 					className="min-h-120 min-w-200 resize-none"
+					disabled={!isEdit}
+					{...register(`opinion`)}
 				/>
 			</TableCell>
 
-			{/* 삭제 버튼 */}
+			{/* 액션 버튼 */}
 			<TableCell className="text-center">
-				<Button
-					type="button"
-					onClick={() => removeRow(index)}
-					variant="ghost"
-					size="sm"
-					className="text-red-500 hover:text-red-700"
-					disabled={!canDelete}
-				>
-					<Trash2 className="h-16 w-16" />
-				</Button>
+				{isEdit ? (
+					<div className="flex flex-col gap-4">
+						<Button
+							type="button"
+							onClick={handleSubmit(onSubmit, onError)}
+							variant="ghost"
+							size="sm"
+							className="text-blue-500 hover:text-blue-700"
+						>
+							{data?.issueReportId ? '수정' : '등록'}
+						</Button>
+						<Button
+							type="button"
+							onClick={handleCancel}
+							variant="ghost"
+							size="sm"
+							className="text-gray-500 hover:text-gray-700"
+						>
+							취소
+						</Button>
+						{data?.issueReportId && (
+							<Button
+								type="button"
+								onClick={() => removeRow(index)}
+								variant="ghost"
+								size="sm"
+								className="text-red-500 hover:text-red-700"
+								disabled={!canDelete}
+							>
+								<Trash2 className="h-16 w-16" />
+							</Button>
+						)}
+					</div>
+				) : (
+					<Button
+						type="button"
+						onClick={() => setIsEdit(true)}
+						variant="ghost"
+						size="sm"
+						className="text-blue-500 hover:text-blue-700"
+					>
+						<Edit className="h-16 w-16" />
+					</Button>
+				)}
 			</TableCell>
 		</TableRow>
 	);

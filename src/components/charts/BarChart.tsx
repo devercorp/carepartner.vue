@@ -129,18 +129,18 @@ export function BarChart({
 						/>
 						{compareDataKey ? (
 							<>
-								<Bar dataKey={dataKey} name={currentLabel} radius={[4, 4, 0, 0]}>
-									{filteredData.map((item, index) => {
-										const originalIndex = data.findIndex((originalItem) => originalItem[nameKey] === item[nameKey]);
-										return <Cell key={`cell-${index}`} fill={colors[originalIndex % colors.length]} />;
-									})}
-								</Bar>
 								<Bar dataKey={compareDataKey} name={compareLabel} radius={[4, 4, 0, 0]}>
 									{filteredData.map((item, index) => {
 										const originalIndex = data.findIndex((originalItem) => originalItem[nameKey] === item[nameKey]);
 										const baseColor = colors[originalIndex % colors.length];
 										// 기본 색상에서 투명도를 낮춘 연한 색상 생성
 										return <Cell key={`cell-${index}`} fill={baseColor} opacity={0.4} />;
+									})}
+								</Bar>
+								<Bar dataKey={dataKey} name={currentLabel} radius={[4, 4, 0, 0]}>
+									{filteredData.map((item, index) => {
+										const originalIndex = data.findIndex((originalItem) => originalItem[nameKey] === item[nameKey]);
+										return <Cell key={`cell-${index}`} fill={colors[originalIndex % colors.length]} />;
 									})}
 								</Bar>
 							</>
