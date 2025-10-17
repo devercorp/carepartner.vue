@@ -1,9 +1,10 @@
-import { ExternalLink, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { useGetFormResponseList } from '@/apis/form';
+import { useGetFormResponseExcel, useGetFormResponseList } from '@/apis/form';
 import DatePicker from '@/components/common/DatePicker';
+import excelExport from '@/utils/excelExport';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -54,6 +55,11 @@ const FormResponsePage = () => {
 		endDate: endDate,
 	});
 
+	const { refetch: refetchExcel, isLoading: isLoadingExcel } = useGetFormResponseExcel({
+		startDate: startDate,
+		endDate: endDate,
+	});
+
 	const handleMoveFormTemplate = () => {
 		window.open(window.location.origin + '/form-template', '_blank');
 	};
@@ -81,6 +87,39 @@ const FormResponsePage = () => {
 		return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 	};
 
+	const handleExcelExport = async () => {
+		const data = await refetchExcel();
+
+		const result = await excelExport({
+			name: '만족도 조사',
+			data:
+				data?.data?.list.map((item) => ({
+					surveyId: item.surveyId,
+					createdAt: item.createdAt,
+					phone: item.phone,
+					overallSat: item.overallSat,
+					answerAccuracy: item.answerAccuracy,
+					previousContact: item.previousContact,
+					freeComment: item.freeComment,
+				})) || [],
+			headers: ['ID', '접수일', '전화번호', '상담 만족도', '대응 만족도', '이전 문의 여부', '내용'],
+			needNumber: false,
+			columnTypes: [
+				{ key: 'surveyId', type: 'string' },
+				{ key: 'createdAt', type: 'string' },
+				{ key: 'phone', type: 'string' },
+				{ key: 'overallSat', type: 'string' },
+				{ key: 'answerAccuracy', type: 'string' },
+				{ key: 'previousContact', type: 'string' },
+				{ key: 'freeComment', type: 'string' },
+			],
+		});
+
+		if (!result) {
+			alert('엑셀 Export가 실패했습니다.');
+		}
+	};
+
 	return (
 		<div className="space-y-24 p-24">
 			<div className="flex justify-between">
@@ -90,10 +129,10 @@ const FormResponsePage = () => {
 						<ExternalLink className="mr-8 h-16 w-16" />
 						상담 신청서로 이동
 					</Button>
-					{/* <Button variant="outline" size="sm">
+					<Button variant="outline" size="sm" onClick={handleExcelExport} disabled={isLoadingExcel}>
 						<Download className="mr-8 h-16 w-16" />
-						내보내기
-					</Button> */}
+						엑셀 Export
+					</Button>
 				</div>
 			</div>
 
@@ -167,7 +206,6 @@ const FormResponsePage = () => {
 								<TableHead>대응 만족도</TableHead>
 								<TableHead>이전 문의 여부</TableHead>
 								<TableHead>내용</TableHead>
-								{/* <TableHead>작업</TableHead> */}
 							</TableRow>
 						</TableHeader>
 
@@ -200,16 +238,6 @@ const FormResponsePage = () => {
 										<TableCell className="max-w-xs truncate" title={response.freeComment}>
 											{response.freeComment || '-'}
 										</TableCell>
-										{/* <TableCell>
-											<div className="flex gap-4">
-												<Button variant="ghost" size="sm">
-													<Eye className="h-16 w-16" />
-												</Button>
-												<Button variant="ghost" size="sm">
-													<MessageCircle className="h-16 w-16" />
-												</Button>
-											</div>
-										</TableCell> */}
 									</TableRow>
 								))
 							) : (
