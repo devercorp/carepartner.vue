@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { CategoryType, DashboardResponseType } from '@/apis/dashboard/type';
+import { CategoryType } from '@/apis/dashboard/type';
 import { BarChart } from '@/components/charts/BarChart';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DEFAULT_CHART_COLORS } from '@/constants/colors';
@@ -8,15 +8,20 @@ import { cn } from '@/lib/utils';
 
 interface TagChartBoxProps {
 	categoryType: CategoryType;
-	data: DashboardResponseType['catMidSubNested'][0]['mids'];
+	data: {
+		midCategory: string;
+		subs: { subCategory: string; cnt: number; prevCnt?: number }[];
+	}[];
+	currentLabel?: string;
+	compareLabel?: string;
 }
 
-const TagChartBox = ({ categoryType, data }: TagChartBoxProps) => {
+const TagChartBox = ({ categoryType, data, currentLabel, compareLabel }: TagChartBoxProps) => {
 	const formatData = useMemo(() => {
 		if (categoryType === 'normal') {
 			const normalData = {
 				midCategory: '일반',
-				subs: [] as { subCategory: string; cnt: number }[],
+				subs: [] as { subCategory: string; cnt: number; prevCnt?: number }[],
 			};
 
 			for (const item of data) {
@@ -24,6 +29,7 @@ const TagChartBox = ({ categoryType, data }: TagChartBoxProps) => {
 					normalData.subs.push({
 						subCategory: sub.subCategory,
 						cnt: sub.cnt,
+						...(sub.prevCnt && { prevCnt: sub.prevCnt }),
 					});
 				}
 			}
@@ -35,7 +41,7 @@ const TagChartBox = ({ categoryType, data }: TagChartBoxProps) => {
 	}, [categoryType, data]);
 
 	return (
-		<div className={cn('grid grid-cols-1 gap-24 lg:grid-cols-2', categoryType === 'normal' && 'lg:grid-cols-1')}>
+		<div className={cn('grid grid-cols-1 gap-24')}>
 			{formatData?.map((item) => (
 				<Card key={item.midCategory}>
 					<CardHeader>
@@ -49,6 +55,9 @@ const TagChartBox = ({ categoryType, data }: TagChartBoxProps) => {
 								nameKey="subCategory"
 								height={300}
 								colors={DEFAULT_CHART_COLORS}
+								compareDataKey={item.subs[0]?.prevCnt !== undefined ? 'prevCnt' : undefined}
+								currentLabel={currentLabel}
+								compareLabel={compareLabel}
 							/>
 						) : (
 							<div className="flex h-full items-center justify-center">

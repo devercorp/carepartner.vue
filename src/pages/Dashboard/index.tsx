@@ -11,7 +11,7 @@ import WeekPicker from '@/components/common/DatePicker/WeekPicker';
 import Modal from '@/components/common/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 import { LineChart } from '../../components/charts/LineChart';
@@ -24,6 +24,13 @@ import IssueWriteBox from './components/IssueWriteBox';
 import TagChartBox from './components/TagChartBox';
 import TagsFilterModal from './components/modal/TagsFilterModal';
 import { calculateRatio, calculateTrend, calculateTimeDifference, valueUnitFormat } from './utils/dataFormat';
+
+const CATEGORY_ENUMS: Record<CategoryType, '요양사' | '기관' | '아카데미' | '일반'> = {
+	caregiver: '요양사',
+	org: '기관',
+	academy: '아카데미',
+	normal: '일반',
+} as const;
 
 const DIVISION_TABS = [
 	{ label: '전체', value: '' },
@@ -62,6 +69,7 @@ const DashboardPage = () => {
 	const [activeDivision, setActiveDivision] = useState<string>(String(searchParams.get('categoryType') ?? ''));
 	const [activeDateTab, setActiveDateTab] = useState<string>(searchParams.get('dailyType') ?? 'daily');
 	const [topN, setTopN] = useState<number>(topCount);
+	const [level, setLevel] = useState<'mid' | 'sub'>('sub');
 
 	const [selectedDate, setSelectedDate] = useState<string>(
 		searchParams.get('startDate') ?? new Date().toISOString().split('T')[0]
@@ -71,13 +79,15 @@ const DashboardPage = () => {
 		categoryType: activeDivision as DashboardParams['categoryType'],
 		dailyType: activeDateTab as DashboardParams['dailyType'],
 		startDate: selectedDate,
-		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')).replaceAll('|', ',') : '',
+		excludeTags: searchParams.get('excludeTags') ? String(searchParams.get('excludeTags')) : '',
 		topN: topCount,
+		level: level,
 	});
 
 	const { data: issueData } = useGetIssueResponseList({
 		startDate: selectedDate,
 		dailyType: activeDateTab as 'daily' | 'weekly' | 'monthly',
+		category: CATEGORY_ENUMS[activeDivision as CategoryType],
 	});
 
 	const kpiPeriod = useMemo(
@@ -191,6 +201,35 @@ const DashboardPage = () => {
 			value: timeDiff.value,
 		};
 	}, [dashboardData?.watingTime]);
+
+	const formatTagData = useMemo(() => {
+		const currentMids = dashboardData?.catMidSubNested[0]?.mids ?? [];
+		const previousMids = dashboardData?.catMidSubNested2[0]?.mids ?? [];
+
+		// 이전 데이터가 없으면 현재 데이터만 반환
+		if (previousMids.length === 0) {
+			return currentMids;
+		}
+
+		// 현재 데이터에 이전 데이터(prevCnt)를 조합
+		return currentMids.map((currentMid) => {
+			// 이전 데이터에서 같은 midCategory 찾기
+			const previousMid = previousMids.find((prevMid) => prevMid.midCategory === currentMid.midCategory);
+
+			return {
+				...currentMid,
+				subs: currentMid.subs.map((currentSub) => {
+					// 이전 데이터에서 같은 subCategory 찾기
+					const previousSub = previousMid?.subs.find((prevSub) => prevSub.subCategory === currentSub.subCategory);
+
+					return {
+						...currentSub,
+						prevCnt: previousSub?.cnt ?? 0,
+					};
+				}),
+			};
+		});
+	}, [dashboardData?.catMidSubNested, dashboardData?.catMidSubNested2]);
 
 	return (
 		<div className="space-y-24 p-24 pb-100">
@@ -490,7 +529,11 @@ const DashboardPage = () => {
 					{activeDivision !== '' && (
 						<TagChartBox
 							categoryType={activeDivision as CategoryType}
-							data={dashboardData?.catMidSubNested[0]?.mids ?? []}
+							data={formatTagData}
+							compareLabel={
+								activeDateTab === 'daily' ? '전일대비' : activeDateTab === 'weekly' ? '전주대비' : '전월대비'
+							}
+							currentLabel="현재"
 						/>
 					)}
 
@@ -498,6 +541,7 @@ const DashboardPage = () => {
 						data={issueData?.issuedList ?? []}
 						dailyType={activeDateTab as 'daily' | 'weekly' | 'monthly'}
 						startDate={selectedDate}
+						category={CATEGORY_ENUMS[activeDivision as CategoryType]}
 					/>
 
 					{/* Weekly/Monthly Specific Content */}
@@ -507,6 +551,17 @@ const DashboardPage = () => {
 								title={`인입이 높은 태그 top ${topCount} (${activeDateTab === 'weekly' ? '주간' : '월간'})`}
 								actionsRender={
 									<div className="flex items-center gap-8">
+										<Select value={level} onValueChange={(value) => setLevel(value as 'mid' | 'sub')}>
+											<SelectTrigger className="w-100">
+												<SelectValue placeholder="선택" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													<SelectItem value="mid">중분류</SelectItem>
+													<SelectItem value="sub">소분류</SelectItem>
+												</SelectGroup>
+											</SelectContent>
+										</Select>
 										<Input
 											className="w-100"
 											type="number"
@@ -522,7 +577,7 @@ const DashboardPage = () => {
 								data={dashboardData?.topTags.map((item, index) => ({ ...item, no: index + 1 })) ?? []}
 								columns={[
 									{ key: 'no', label: '번호', type: 'number' },
-									{ key: 'subCategory', label: '태그명', type: 'text' },
+									{ key: 'name', label: '태그명', type: 'text' },
 									{ key: 'cnt', label: '건수', type: 'number' },
 									{ key: 'trendPct', label: '추이', type: 'trend' },
 								]}

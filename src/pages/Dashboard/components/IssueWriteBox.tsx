@@ -1,8 +1,5 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
-import { useEffect } from 'react';
-import { SubmitErrorHandler, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import z from 'zod';
+import { useEffect, useState } from 'react';
 
 import { useDeleteIssue, useSaveIssue } from '@/apis/issue';
 import { IssueResponseType, IssueWriteFormType } from '@/apis/issue/type';
@@ -13,117 +10,140 @@ import { TableRow } from '@/components/ui/table';
 
 import IssueWriteRow from './IssueWriteRow';
 
-interface IssueWriteForm {
-	rows: IssueWriteFormType[];
-}
-
 interface IssueWriteBoxProps {
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	data?: IssueResponseType[];
 	startDate: string;
+	category?: '요양사' | '기관' | '아카데미' | '일반';
 }
 
-const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
-	const { control, register, handleSubmit, watch, setValue } = useForm<IssueWriteForm>({
-		defaultValues: {
-			rows: [
-				{
-					dailyType: dailyType,
-					category: '',
-					midCategory: '',
-					subCategory: '',
-					orgCnt: 0,
-					issueDetail: '',
-					linkUrl: '',
-					opinion: '',
-				},
-			],
-		},
-		resolver: zodResolver(
-			z.object({
-				rows: z.array(
-					z.object({
-						issueReportId: z.number().optional(),
-						dailyType: z.enum(['daily', 'weekly', 'monthly']),
-						category: z.string(),
-						midCategory: z.string(),
-						subCategory: z.string(),
-						orgCnt: z.number(),
-						issueDetail: z.string().optional(),
-						linkUrl: z.string().optional(),
-						opinion: z.string().optional(),
-					})
-				),
-			})
-		),
-	});
-
+const IssueWriteBox = ({ dailyType, data, startDate, category }: IssueWriteBoxProps) => {
 	const { mutateAsync: mutateSaveIssue } = useSaveIssue();
 	const { mutateAsync: mutateDeleteIssue } = useDeleteIssue();
 
-	const { fields, append, remove } = useFieldArray({
-		control,
-		name: 'rows',
-	});
+	const [rows, setRows] = useState<IssueWriteFormType[]>([]);
 
 	// 새 행 추가
 	const addRow = () => {
 		const newRow: IssueWriteFormType = {
 			dailyType: dailyType,
-			category: '',
+			category: category ?? '',
 			midCategory: '',
 			subCategory: '',
 			orgCnt: 0,
 			issueDetail: '',
-			linkUrl: '',
+			links: [''],
 			opinion: '',
 		};
-		append(newRow);
+		setRows((prev) => [...prev, newRow]);
 	};
 
-	// 행 삭제
-	const removeRow = (index: number) => {
-		if (fields.length > 1) {
-			remove(index);
+	// 행 저장 (등록/수정)
+	const handleSave = async (index: number, formData: IssueWriteFormType) => {
+		try {
+			// links 배열을 linkUrl1~4로 변환
+			const { links, ...rest } = formData;
+			const linkObj: Record<string, string> = {};
 
-			const findIndex = watch('rows')[index]?.issueReportId;
-
-			if (findIndex) {
-				mutateDeleteIssue({ issue_report_id: findIndex });
+			if (links && links.length > 0) {
+				links.forEach((link, idx) => {
+					if (link && idx < 4) {
+						linkObj[`linkUrl${idx + 1}`] = link;
+					}
+				});
 			}
+
+			const transformedData = {
+				...rest,
+				linkUrl1: linkObj.linkUrl1 || '',
+				linkUrl2: linkObj.linkUrl2 || '',
+				linkUrl3: linkObj.linkUrl3 || '',
+				linkUrl4: linkObj.linkUrl4 || '',
+			};
+
+			const res = await mutateSaveIssue([transformedData]);
+
+			if (res.data.result === 'success') {
+				alert(formData.issueReportId ? '수정되었습니다.' : '등록되었습니다.');
+
+				// 저장 후 해당 행 업데이트
+				setRows((prev) => {
+					const newRows = [...prev];
+					newRows[index] = {
+						...formData,
+						issueReportId: formData.issueReportId || res.data.data?.issueReportId,
+					};
+					return newRows;
+				});
+			}
+		} catch (error) {
+			console.error('저장 실패:', error);
+			alert('저장에 실패했습니다.');
+			throw error;
 		}
 	};
 
-	// 카테고리 연계 업데이트 (대분류 변경 시 하위 분류 초기화)
-	const handleCategoryChange = (index: number, value: string) => {
-		setValue(`rows.${index}.category`, value);
-		setValue(`rows.${index}.midCategory`, '');
-		setValue(`rows.${index}.subCategory`, '');
-	};
+	// 행 삭제
+	const removeRow = async (index: number) => {
+		if (rows.length <= 1) {
+			alert('최소 1개의 행은 유지되어야 합니다.');
+			return;
+		}
 
-	// 중분류 변경 시 소분류 초기화
-	const handleMidCategoryChange = (index: number, value: string) => {
-		setValue(`rows.${index}.midCategory`, value);
-		setValue(`rows.${index}.subCategory`, '');
-	};
+		const targetRow = rows[index];
 
-	// 폼 제출 핸들러
-	const onSubmit: SubmitHandler<IssueWriteForm> = (data) => {
-		console.log('Form Data:', data);
-		// TODO: API 호출 로직 추가
+		if (targetRow?.issueReportId) {
+			try {
+				await mutateDeleteIssue({ issue_report_id: targetRow.issueReportId });
+				alert('삭제되었습니다.');
+			} catch (error) {
+				console.error('삭제 실패:', error);
+				alert('삭제에 실패했습니다.');
+				return;
+			}
+		}
 
-		mutateSaveIssue(data.rows);
-	};
-
-	const onError: SubmitErrorHandler<IssueWriteForm> = (error) => {
-		console.log('Error:', error);
+		setRows((prev) => prev.filter((_, idx) => idx !== index));
 	};
 
 	useEffect(() => {
 		if (data?.length && data.length > 0) {
-			setValue('rows', data, { shouldDirty: true });
+			// API 응답 데이터를 links 배열로 변환
+			const transformedData = data.map((row) => {
+				const links: string[] = [];
+
+				// linkUrl1~4를 배열로 변환
+				if (row.linkUrl1) links.push(row.linkUrl1);
+				if (row.linkUrl2) links.push(row.linkUrl2);
+				if (row.linkUrl3) links.push(row.linkUrl3);
+				if (row.linkUrl4) links.push(row.linkUrl4);
+
+				// 최소 1개는 있어야 함
+				if (links.length === 0) links.push('');
+
+				return {
+					...row,
+					links,
+				};
+			});
+
+			setRows(transformedData);
+		} else {
+			// 데이터가 없으면 빈 행 하나 추가
+			setRows([
+				{
+					dailyType: dailyType,
+					category: category ?? '',
+					midCategory: '',
+					subCategory: '',
+					orgCnt: 0,
+					issueDetail: '',
+					links: [''],
+					opinion: '',
+				},
+			]);
 		}
-	}, [data]);
+	}, [data, dailyType, category]);
 
 	return (
 		<div className="space-y-24">
@@ -134,44 +154,37 @@ const IssueWriteBox = ({ dailyType, data, startDate }: IssueWriteBoxProps) => {
 						<Button onClick={addRow} variant="outline" size="sm">
 							<Plus className="mr-8 h-16 w-16" />행 추가
 						</Button>
-						<Button type="submit" variant="default" size="sm" form="issue-write-form">
-							저장
-						</Button>
 					</div>
 				</CardHeader>
 				<CardContent>
-					<form id="issue-write-form" onSubmit={handleSubmit(onSubmit, onError)}>
-						<Table>
-							<TableHeader>
-								<TableRow className="bg-gray-100">
-									<TableHead className="w-[120px] text-center">대분류</TableHead>
-									<TableHead className="w-[120px] text-center">중분류</TableHead>
-									<TableHead className="w-[120px] text-center">소분류</TableHead>
-									<TableHead className="w-[120px] text-center">기간별 건수 조회</TableHead>
-									<TableHead className="text-center">Issue 상세</TableHead>
-									<TableHead className="w-[120px] text-center">링크 삽입</TableHead>
-									<TableHead className="text-center">의견</TableHead>
-									<TableHead className="w-[60px] text-center">삭제</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{fields.map((field, index) => (
-									<IssueWriteRow
-										key={field.id}
-										index={index}
-										register={register}
-										watch={watch}
-										setValue={setValue}
-										removeRow={removeRow}
-										onCategoryChange={handleCategoryChange}
-										onMidCategoryChange={handleMidCategoryChange}
-										canDelete={fields.length > 1}
-										startDate={startDate}
-									/>
-								))}
-							</TableBody>
-						</Table>
-					</form>
+					<Table>
+						<TableHeader>
+							<TableRow className="bg-gray-100">
+								<TableHead className="w-[120px] text-center">대분류</TableHead>
+								<TableHead className="w-[120px] text-center">중분류</TableHead>
+								<TableHead className="w-[120px] text-center">소분류</TableHead>
+								<TableHead className="w-[120px] text-center">기간별 건수 조회</TableHead>
+								<TableHead className="text-center">Issue 상세</TableHead>
+								<TableHead className="w-[120px] text-center">링크 삽입</TableHead>
+								<TableHead className="text-center">의견</TableHead>
+								<TableHead className="w-[60px] text-center"></TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{rows.map((row, index) => (
+								<IssueWriteRow
+									key={row.issueReportId ? `issue-${row.issueReportId}` : `new-${index}`}
+									data={row}
+									index={index}
+									removeRow={removeRow}
+									onSave={handleSave}
+									canDelete={rows.length > 1}
+									startDate={startDate}
+									isCategory={category ? true : false}
+								/>
+							))}
+						</TableBody>
+					</Table>
 				</CardContent>
 			</Card>
 		</div>

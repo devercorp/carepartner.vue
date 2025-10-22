@@ -13,6 +13,7 @@ export type DashboardParams = {
 	startDate: string;
 	excludeTags?: string;
 	topN?: number;
+	level: 'mid' | 'sub';
 };
 
 export type DashboardResponseType = {
@@ -90,9 +91,25 @@ export type DashboardResponseType = {
 		subCategory: string;
 		cnt: number;
 		trendPct?: number;
+
+		category: string;
+		level: 'mid' | 'sub';
+		midCategory: string;
+		name: string;
 	}[];
 
 	catMidSubNested: {
+		category: string;
+		mids: {
+			midCategory: '요양사' | '기관' | '아카데미' | '일반';
+			subs: {
+				cnt: number;
+				subCategory: string;
+			}[];
+		}[];
+	}[];
+
+	catMidSubNested2: {
 		category: string;
 		mids: {
 			midCategory: '요양사' | '기관' | '아카데미' | '일반';

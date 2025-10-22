@@ -20,3 +20,17 @@ export const useGetFormResponseList = (params: FormResponseListParams) => {
 		select: (data) => data.data,
 	});
 };
+
+export const useGetFormResponseExcel = (params: { startDate: string; endDate: string }) => {
+	const formattedParams = {
+		...params,
+		page: 1,
+		size: 999999,
+	};
+
+	return useQuery<AxiosResponse<FormResponseListResponse>, AxiosError, FormResponseListResponse>({
+		queryKey: [API_PATH.DASHBOARD, formattedParams],
+		queryFn: () => api.post(API_PATH.FORM_RESPONSE_LIST, formattedParams),
+		select: (data) => data.data,
+	});
+};
