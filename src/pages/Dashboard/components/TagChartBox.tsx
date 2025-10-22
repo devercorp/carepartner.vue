@@ -41,7 +41,7 @@ const TagChartBox = ({ categoryType, data, currentLabel, compareLabel }: TagChar
 	}, [categoryType, data]);
 
 	return (
-		<div className={cn('grid grid-cols-1 gap-24 lg:grid-cols-2', categoryType === 'normal' && 'lg:grid-cols-1')}>
+		<div className={cn('grid grid-cols-1 gap-24')}>
 			{formatData?.map((item) => (
 				<Card key={item.midCategory}>
 					<CardHeader>
