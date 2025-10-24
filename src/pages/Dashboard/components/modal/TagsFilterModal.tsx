@@ -20,7 +20,7 @@ const TagsFilterModal = ({ closeModal }: TagsFilterModalProps) => {
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [excludeTags, setExcludeTags] = useState<string[]>(
-		searchParams.get('excludeTags') ? (searchParams.get('excludeTags')?.split('|') as string[]) : []
+		searchParams.get('excludeTags') ? (searchParams.get('excludeTags')?.split(',') as string[]) : []
 	);
 
 	const [searchTerm, setSearchTerm] = useState<string>('');
@@ -75,7 +75,7 @@ const TagsFilterModal = ({ closeModal }: TagsFilterModalProps) => {
 	const handleApply = () => {
 		const params = Object.fromEntries(searchParams.entries());
 
-		setSearchParams({ ...params, excludeTags: excludeTags.join('|') });
+		setSearchParams({ ...params, excludeTags: excludeTags.join(',') });
 
 		closeModal();
 	};
