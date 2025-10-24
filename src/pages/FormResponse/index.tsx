@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useGetFormResponseExcel, useGetFormResponseList } from '@/apis/form';
+import { SCORE_OPTIONS, SCORE_OPTIONS_TYPE } from '@/apis/form/type';
 import DatePicker from '@/components/common/DatePicker';
 import excelExport from '@/utils/excelExport';
 
@@ -20,7 +21,7 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 const FormResponsePage = () => {
-	const getSatisfactionColor = (satisfaction: string) => {
+	const getSatisfactionColor = (satisfaction: SCORE_OPTIONS_TYPE) => {
 		const baseClasses = 'text-white font-medium';
 		switch (satisfaction) {
 			case '매우만족':
@@ -97,8 +98,8 @@ const FormResponsePage = () => {
 					surveyId: item.surveyId,
 					createdAt: item.createdAt,
 					phone: item.phone,
-					overallSat: item.overallSat,
-					answerAccuracy: item.answerAccuracy,
+					overallSat: SCORE_OPTIONS[item.overallSat],
+					answerAccuracy: SCORE_OPTIONS[item.answerAccuracy],
 					previousContact: item.previousContact,
 					freeComment: item.freeComment,
 				})) || [],

@@ -300,7 +300,7 @@ const IssueWriteRow = ({
 			<TableCell>
 				<Textarea
 					placeholder="이슈 상세 내용을 입력하세요"
-					className="min-h-120 min-w-200 resize-none"
+					className="[field-sizing:content] min-h-120 min-w-200 resize-none"
 					disabled={!isEdit}
 					{...register(`issueDetail`)}
 				/>
@@ -352,7 +352,7 @@ const IssueWriteRow = ({
 			<TableCell>
 				<Textarea
 					placeholder="개선 방향이나 의견을 입력하세요"
-					className="min-h-120 min-w-200 resize-none"
+					className="[field-sizing:content] min-h-120 min-w-200 resize-none"
 					disabled={!isEdit}
 					{...register(`opinion`)}
 				/>
