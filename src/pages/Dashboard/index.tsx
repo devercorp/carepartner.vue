@@ -95,6 +95,23 @@ const DashboardPage = () => {
 		[activeDateTab]
 	);
 
+	// 일반 상담 건수 계산 (전체 - 요양사 - 아카데미 - 기관)
+	const normalCount = useMemo(() => {
+		const total = dashboardData?.dashTop.totalCount || 0;
+		const caregiver = dashboardData?.dashTop.caregiverCount || 0;
+		const academy = dashboardData?.dashTop.academyCount || 0;
+		const org = dashboardData?.dashTop.orgCount || 0;
+		return total - caregiver - academy - org;
+	}, [dashboardData?.dashTop]);
+
+	const lastNormalCount = useMemo(() => {
+		const lastTotal = dashboardData?.dashTop.lastTotalCount || 0;
+		const lastCaregiver = dashboardData?.dashTop.lastCaregiverCount || 0;
+		const lastAcademy = dashboardData?.dashTop.lastAcademyCount || 0;
+		const lastOrg = dashboardData?.dashTop.lastOrgCount || 0;
+		return lastTotal - lastCaregiver - lastAcademy - lastOrg;
+	}, [dashboardData?.dashTop]);
+
 	const surveyPeriod = useCallback(
 		(dayIndex: number) => {
 			if (activeDateTab === 'daily') {
@@ -334,8 +351,9 @@ const DashboardPage = () => {
 
 				<TabsContent value={activeDateTab} className="space-y-24">
 					{/* Secondary KPI Cards */}
-					<div className="grid grid-cols-1 gap-16 md:grid-cols-2 lg:grid-cols-4">
+					<div className="grid grid-cols-1 gap-16 lg:grid-cols-2 xl:grid-cols-5">
 						<KPICard
+							className="lg:col-span-2 xl:col-span-1"
 							title="총 상담 건수"
 							value={valueUnitFormat(dashboardData?.dashTop.totalCount || 0, '건')}
 							trend={{
@@ -374,6 +392,15 @@ const DashboardPage = () => {
 									dashboardData?.dashTop.academyCount || 0,
 									dashboardData?.dashTop.lastAcademyCount || 0
 								),
+								period: kpiPeriod,
+							}}
+							color="orange"
+						/>
+						<KPICard
+							title="일반 상담 건수"
+							value={valueUnitFormat(normalCount, '건')}
+							trend={{
+								...calculateTrend(normalCount, lastNormalCount),
 								period: kpiPeriod,
 							}}
 							color="orange"
