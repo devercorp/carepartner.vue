@@ -206,12 +206,36 @@ const DashboardPage = () => {
 		const currentMids = dashboardData?.catMidSubNested[0]?.mids ?? [];
 		const previousMids = dashboardData?.catMidSubNested2[0]?.mids ?? [];
 
-		// 이전 데이터가 없으면 현재 데이터만 반환
-		if (previousMids.length === 0) {
-			return currentMids;
+		// 둘 다 데이터가 없으면 빈 배열 반환
+		if (currentMids.length === 0 && previousMids.length === 0) {
+			return [];
 		}
 
-		// 현재 데이터에 이전 데이터(prevCnt)를 조합
+		// 이전 데이터만 있는 경우: 어제 데이터를 이전 데이터로 표시하고 현재 데이터는 0으로 설정
+		if (currentMids.length === 0 && previousMids.length > 0) {
+			return previousMids.map((previousMid) => ({
+				...previousMid,
+				cnt: 0, // 현재 데이터는 0으로 설정
+				subs: previousMid.subs.map((previousSub) => ({
+					...previousSub,
+					cnt: 0, // 현재 데이터는 0으로 설정
+					prevCnt: previousSub.cnt, // 어제 데이터를 이전 데이터로 설정
+				})),
+			}));
+		}
+
+		// 현재 데이터만 있는 경우: 현재 데이터를 그대로 반환하고 prevCnt는 0으로 설정
+		if (currentMids.length > 0 && previousMids.length === 0) {
+			return currentMids.map((currentMid) => ({
+				...currentMid,
+				subs: currentMid.subs.map((currentSub) => ({
+					...currentSub,
+					prevCnt: 0,
+				})),
+			}));
+		}
+
+		// 둘 다 데이터가 있는 경우: 현재 데이터에 이전 데이터(prevCnt)를 조합
 		return currentMids.map((currentMid) => {
 			// 이전 데이터에서 같은 midCategory 찾기
 			const previousMid = previousMids.find((prevMid) => prevMid.midCategory === currentMid.midCategory);
@@ -530,9 +554,7 @@ const DashboardPage = () => {
 						<TagChartBox
 							categoryType={activeDivision as CategoryType}
 							data={formatTagData}
-							compareLabel={
-								activeDateTab === 'daily' ? '전일대비' : activeDateTab === 'weekly' ? '전주대비' : '전월대비'
-							}
+							compareLabel={activeDateTab === 'daily' ? '어제' : activeDateTab === 'weekly' ? '지난주' : '지난달'}
 							currentLabel="현재"
 						/>
 					)}
