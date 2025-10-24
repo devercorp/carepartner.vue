@@ -10,7 +10,7 @@ import { DashboardParams, DashboardResponseType, TagsResponseType } from './type
 export const useGetDashboard = (params: DashboardParams) => {
 	return useQuery<AxiosResponse<AxiosResponseType<DashboardResponseType>>, AxiosError, DashboardResponseType>({
 		queryKey: [API_PATH.DASHBOARD, params],
-		queryFn: () => api.get(API_PATH.DASHBOARD, params),
+		queryFn: () => api.post(API_PATH.DASHBOARD, params),
 		select: (data) => data.data.data,
 		enabled: !!params.startDate,
 	});

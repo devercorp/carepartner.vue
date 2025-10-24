@@ -11,7 +11,7 @@ export type DashboardParams = {
 	categoryType: CategoryType | string;
 	dailyType: 'daily' | 'weekly' | 'monthly';
 	startDate: string;
-	excludeTags?: string;
+	excludeTags?: string[];
 	topN?: number;
 	level: 'mid' | 'sub';
 };
