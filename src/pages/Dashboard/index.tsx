@@ -468,45 +468,47 @@ const DashboardPage = () => {
 					</div>
 					{!isLoading && (
 						<>
-							<div className="grid grid-cols-1 gap-24 lg:grid-cols-2 2xl:grid-cols-3">
-								<Card className="col-span-1 lg:col-span-2 2xl:col-span-1">
-									<CardHeader>
-										<CardTitle>상담 만족도 평균 분포</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<LineChart
-											data={[
-												...(dashboardData?.surveyOverallAvg.map((item) => ({
-													...item,
-													period: surveyPeriod(item.dayIndex),
-												})) ?? []),
-											].reverse()}
-											lines={[
-												{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
-												{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
-											]}
-											height={300}
-											range={[0, 5]}
-										/>
-									</CardContent>
-								</Card>
-								<Card>
-									<CardHeader>
-										<CardTitle>상담 만족도 분포</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} type="average" />
-									</CardContent>
-								</Card>
-								<Card>
-									<CardHeader>
-										<CardTitle>대응 만족도 분포</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} type="average" />
-									</CardContent>
-								</Card>
-							</div>
+							{activeDivision === '' && (
+								<div className="grid grid-cols-1 gap-24 lg:grid-cols-2 2xl:grid-cols-3">
+									<Card className="col-span-1 lg:col-span-2 2xl:col-span-1">
+										<CardHeader>
+											<CardTitle>상담 만족도 평균 분포</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<LineChart
+												data={[
+													...(dashboardData?.surveyOverallAvg.map((item) => ({
+														...item,
+														period: surveyPeriod(item.dayIndex),
+													})) ?? []),
+												].reverse()}
+												lines={[
+													{ dataKey: 'avgOverallSat', name: '상담 만족도', color: '#10B981' },
+													{ dataKey: 'avgAnswerAccuracy', name: '대응 만족도', color: '#3B82F6' },
+												]}
+												height={300}
+												range={[0, 5]}
+											/>
+										</CardContent>
+									</Card>
+									<Card>
+										<CardHeader>
+											<CardTitle>상담 만족도 분포</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<PieChart data={formatTotalTags2('overall')} dataKey="value" height={300} type="average" />
+										</CardContent>
+									</Card>
+									<Card>
+										<CardHeader>
+											<CardTitle>대응 만족도 분포</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<PieChart data={formatTotalTags2('answer')} dataKey="value" height={300} type="average" />
+										</CardContent>
+									</Card>
+								</div>
+							)}
 
 							{/* Charts Section */}
 							{activeDivision !== CategoryType.NORMAL && (
