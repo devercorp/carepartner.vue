@@ -51,7 +51,8 @@ const trendLines = {
 		{ dataKey: 'howToUse', name: '사용법', color: '#3B82F6' },
 		{ dataKey: 'error', name: '오류', color: '#10B981' },
 		{ dataKey: 'inconvenience', name: '불편', color: '#F59E0B' },
-		{ dataKey: 'etc', name: '기타', color: '#8B5CF6' },
+		{ dataKey: 'cusEtc', name: '고객정보', color: '#ff9fc7' },
+		{ dataKey: 'notCusEtc', name: '기타', color: '#8B5CF6' },
 	],
 	academy: [
 		{ dataKey: 'inquiry', name: '문의', color: '#3B82F6' },
@@ -170,7 +171,8 @@ const DashboardPage = () => {
 				{ name: '사용법', value: channelData?.howToUse ?? 0, color: '#3B82F6' },
 				{ name: '오류문의', value: channelData?.error ?? 0, color: '#10B981' },
 				{ name: '불편신고', value: channelData?.inconvenience ?? 0, color: '#F59E0B' },
-				{ name: '기타', value: channelData?.etc ?? 0, color: '#8B5CF6' },
+				{ name: '고객정보', value: channelData?.cusEtc ?? 0, color: '#ff9fc7' },
+				{ name: '기타', value: channelData?.notCusEtc ?? 0, color: '#8B5CF6' },
 			];
 		}
 	};

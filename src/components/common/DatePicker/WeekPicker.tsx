@@ -153,7 +153,7 @@ const WeekPicker = ({ className, disabled, placeholder, onChange, value, ...prop
 				setWeek(parsedWeek);
 				setYearInput(parsedYear.toString());
 			} catch (error) {
-				console.error('Invalid date format:', value);
+				console.error('Invalid date format:', value, error);
 			}
 		} else if (!value && onChange) {
 			// 초기값이 없으면 현재 날짜 기준으로 설정

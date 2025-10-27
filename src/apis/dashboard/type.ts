@@ -65,6 +65,8 @@ export type DashboardResponseType = {
 		howToUse?: number; // 사용법
 		error?: number; // 오류
 		etc?: number; // 기타
+		cusEtc?: number; // 고객정보
+		notCusEtc?: number; // 기타 (고객정보 제외)
 
 		/** 전체 일 경우 */
 		academyCount?: number; // 아카데미 상담 건수
